@@ -1,0 +1,25 @@
+{
+  "name": "xgvisualize",
+  "version": "0.0.1",
+  "author": "Sandro Hardy <sandro.hardy@kom.tu-darmstadt.de>",
+  "description": "Web Application to visualize sensor data from exergame labs. Simply drag&drop files to start.",
+  "contributors": [
+    { "name": "Dominik Schreiber", "email": "domischreib@gmail.com", "url": "dominikschreiber.com" },
+    { "name": "Michael Bräunlein", "email": "mbraeunlein@gmail.com" },
+    { "name": "Aline Pfeilsticker", "email": "araneiala@yahoo.de" }
+  ],
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "data-visualization",
+    "exergames"
+  ],
+  "private": true,
+  "dependencies": {
+    "express": "3.0.6",
+    "ejs": "*",
+    "less-middleware": "*",
+    "nano": "3.3.8"
+  }
+}
