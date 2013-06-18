@@ -81,8 +81,6 @@ function persist(file, body) {
     content: body
   };
 
-  console.log(data);
-
   createInstance(function(id) {
     upload(id, data, function() {
       location.pathname = id;
