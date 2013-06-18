@@ -7,6 +7,7 @@ exports.create = function(req, res) {
     if (listError) {
       error(listError.message, res);
     } else {
+      console.log(listBody);
       var id = generateNewInstanceID(listBody.rows);
       instances.insert({}, id, function(insertError, insertBody) {
         res.writeHead('Content-Type', 'application/json');
@@ -18,6 +19,7 @@ exports.create = function(req, res) {
 
 
 function error(message, res) {
+  console.warn(message);
   res.writeHead('Content-Type', 'text/plain');
   res.end(message);
 }
