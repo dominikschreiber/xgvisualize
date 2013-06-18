@@ -1,5 +1,5 @@
 var nano = require('nano')(process.env.DBHOST || 'http://dominikschreiber:BUlTBiQIXz@81.169.133.153:5984')
-  , instances = nano.use(process.env.DB || 'dsa');
+  , instances = nano.use(process.env.DB || 'xgv');
 
 
 exports.create = function(req, res) {
