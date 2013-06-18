@@ -7,11 +7,9 @@ exports.create = function(req, res) {
     if (listError) {
       error(listError.message, res);
     } else {
-      console.log(listBody);
       var id = generateNewInstanceID(listBody.rows);
       instances.insert({}, id, function(insertError, insertBody) {
-        res.writeHead('Content-Type', 'application/json');
-        res.end(id);
+        res.send(id);
       });
     }
   });
@@ -33,7 +31,6 @@ function generateNewInstanceID(documents) {
       id = generateInstanceID();
       i = 0;
     }
-    console.log(i, id);
   }
   return id;
 }
@@ -77,8 +74,7 @@ exports.upload = function(req, res) {
         if (insertError) {
           error(insertError.message, res);
         } else {
-          res.writeHead('Content-Type', 'application/json');
-          res.end('successfully uploaded "' + data.name + '"');
+          res.send('successfully uploaded "' + data.name + '"');
         }
       });
     }
