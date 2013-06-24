@@ -10,6 +10,7 @@
 html,
 body {
   height: 100%;
+  overflow: hidden;
   font-family: 'Exo', sans-serif;
 }
 .app {
@@ -33,11 +34,17 @@ body {
   color: white;
   font-weight: bold;
   text-decoration: none;
+  background-color: transparent;
+  -webkit-transition: background-color 0.1s;
+  transition: background-color 0.1s;
+}
+.app-brand:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 #main-container {
   height: 100%;
-  position: relative;
   background-color: white;
+  z-index: 0;
 }
 #main-container.empty {
   -webkit-transition: background-color 0.1s;
@@ -58,4 +65,26 @@ body {
   left: 50%;
   font-size: 300%;
   text-align: center;
+}
+#helper-container {
+  position: absolute;
+  background-color: rgba(190, 150, 50, 0.3);
+  z-index: 9999999999999;
+}
+.bordered {
+  border: 1px solid black;
+}
+.container {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+  position: relative;
+}
+.content,
+.content > * {
+  display: block;
+  width: 100%;
+  height: 100%;
 }

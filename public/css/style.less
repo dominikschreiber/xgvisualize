@@ -13,6 +13,7 @@
 
 html, body {
   height: 100%;
+  overflow: hidden;
   font-family: 'Exo', sans-serif;
 }
 
@@ -36,14 +37,22 @@ html, body {
   color: white;
   font-weight: bold;
   text-decoration: none;
+
+  background-color: transparent;
+
+  .transition(background-color @duration);
+}
+
+.app-brand:hover {
+  background-color: rgba(255, 255, 255, .1);
 }
 
 // ===== main =======================================================
 
 #main-container {
   height: 100%;
-  position: relative;
   background-color: white;
+  z-index: 0;
 }
 
 #main-container.empty {
@@ -69,4 +78,32 @@ html, body {
 
   font-size: 300%;
   text-align: center;
+}
+
+// ===== helper =====================================================
+
+#helper-container {
+  position: absolute;
+  background-color: rgba(190, 150, 50, .3);
+  z-index: 9999999999999;
+}
+
+// ===== container ==================================================
+
+.bordered {
+  border: 1px solid black;
+}
+
+.container {
+  .box-sizing(border-box);
+  position: relative;
+}
+
+// ===== content ====================================================
+
+.content,
+.content > * {
+  display: block;
+  width: 100%;
+  height: 100%;
 }

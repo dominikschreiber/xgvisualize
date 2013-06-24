@@ -1,13 +1,24 @@
 {
   "name": "xgvisualize",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Sandro Hardy <sandro.hardy@kom.tu-darmstadt.de>",
   "description": "Web Application to visualize sensor data from exergame labs. Simply drag&drop files to start.",
   "contributors": [
-    { "name": "Dominik Schreiber", "email": "domischreib@gmail.com", "url": "dominikschreiber.com" },
-    { "name": "Michael Bräunlein", "email": "mbraeunlein@gmail.com" },
-    { "name": "Aline Pfeilsticker", "email": "araneiala@yahoo.de" }
+    {
+      "name": "Dominik Schreiber",
+      "email": "domischreib@gmail.com",
+      "url": "dominikschreiber.com"
+    },
+    {
+      "name": "Michael Bräunlein",
+      "email": "mbraeunlein@gmail.com"
+    },
+    {
+      "name": "Aline Pfeilsticker",
+      "email": "araneiala@yahoo.de"
+    }
   ],
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
@@ -21,5 +32,12 @@
     "ejs": "*",
     "less-middleware": "*",
     "nano": "3.3.8"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-watch": "~0.4.4",
+    "grunt-contrib-uglify": "~0.2.2",
+    "grunt-contrib-jshint": "~0.6.0",
+    "grunt-nodemon": "0.0.5"
   }
 }
