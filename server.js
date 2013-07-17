@@ -27,6 +27,7 @@ app.configure('development', function() {
 app.get('/', index.home);
 
 app.get('/new', instance.create);
+
 app.get('/:id([A-Z0-9]{6})', instance.workspace);
 app.post('/:id([A-Z0-9]{6})', instance.upload);
 

@@ -1,8 +1,8 @@
 var $main
   , csvHandler = {
       iam: 'chart',
-      when: function( filetype ) {
-        return filetype.match('text/csv');
+      when: function( filename ) {
+        return filename.endsWith('csv');
       },
       thenRead: function( reader, file ) {
         reader.readAsText( file );
@@ -22,18 +22,29 @@ var $main
         });
 
         $container.resizable();
+      },
+      toJSON: function( $container ) {
+        console.info( 'csv' );
       }
     }
   , videoHandler = {
       iam: 'video',
-      when: function( filetype ) {
-        return filetype.match('video/*');
+      when: function( filename ) {
+        return filename.endsWith('webm') || filename.endsWith('mp4');
       },
       thenRead: function( reader, file ) {
         reader.readAsDataURL( file );
       },
       thenDo: function( $container, file, body ) {
         $( '<video src="' + body + '" alt="' + file.name + '" type="' + file.type + '" controls/>' ).appendTo( $container );
+      },
+      toJSON: function( $container ) {
+        var video = $container.find( 'video' );
+
+        return {
+          src: video.attr( 'src' ),
+          type: video.attr( 'type' )
+        };
       }
     };
 

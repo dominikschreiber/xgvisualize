@@ -10,9 +10,11 @@
             resizeDistance: 10,
             // this is an array of objects of the form
             // {
-            //   when: function( filetype ), -> if this condition holds
+            //   iam: String, -> class added to $containers for this handler
+            //   when: function( filename ), -> if this condition holds
             //   thenRead: function( reader, file ), -> the reader should read the file that way
-            //   thenDo: function( $container, file, body ) -> and it should be processed that way
+            //   thenDo: function( $container, file, body ), -> and it should be processed that way
+            //   toJSON: function( $container ) -> convert content in $container to JSON
             // }
             handlers: []
         };
@@ -185,7 +187,7 @@
                               , $over = self.isOver( middle )
                               , $newContainer;
 
-                            if ( handler.when( file.type ) ) {
+                            if ( handler.when( file.name ) ) {
                                 $newContainer = self.splitContainer( $over, self.splitDirection( $over, middle ) );
                                 handler.thenDo( $newContainer.addClass( handler.iam ), file, evt.target.result );
                             }
@@ -196,7 +198,7 @@
                     for ( var j = 0; j < self.options.handlers.length; j++ ) {
                         var handler = self.options.handlers[ j ];
 
-                        if ( handler.when( file.type ) ) {
+                        if ( handler.when( file.name ) ) {
                             handler.thenRead( reader, file );
                         }
                     }
@@ -351,7 +353,7 @@
                 $element.removeClass( self.getClass( $element ) );
                 return true;
             } else {
-                console.log( "one does not simply remove the main container!" );
+                console.warn( "one does not simply remove the main container!" );
                 return false;
             }
         },
@@ -360,11 +362,12 @@
         getClass: function ( $element ) {
             var self =  this;
 
-            for ( var i = 0; i < self.options.handlers; i++ ) {
-                var cls = self.options.handlers[ i ].iam;
+            $.each(self.options.handlers, function( index, value ) {
+                if ( $element.hasClass( value.iam ) ) {
+                    return value.iam;
+                }
+            });
 
-                if ( $element.hasClass( cls ) ) return cls;
-            }
             return false;
         },
 
@@ -614,32 +617,66 @@
                 } ).addClass( newClasses )
               , splitDirection = ( self.isHorizontalBorder( edge ) ) ? 'horizontal' : 'vertical'
               , $newContent = $( '<div class="content"/>' )
-              , $oldContent = $( '<div class="content"/>' )
               , $containerContent = $container.children( '.content' );
 
             if ( self.containsMediaElement( $container ) ) {
                 if ( self.isHorizontalBorder( edge ) && $container.width() / 2 < self.options.minWidth ) {
-                    console.log( 'minimum window width reached' );
+                    console.warn( 'minimum window width reached' );
                     return false;
                 } else if ( self.isVerticalBorder( edge ) && $container.height() / 2 < self.options.minHeight ) {
-                    console.log( 'minimum window height reached' );
+                    console.warn( 'minimum window height reached' );
                     return false;
                 }
 
-                $oldContent.empty().append($containerContent)
-                    .addClass( $containerContent.attr('class') );
                 $container.remove('.content');
 
                 $container.removeClass( 'bordered' )
                     .addClass( splitDirection )
                     .append( $child1.append( $newContent ) )
-                    .append( $child2.append( $oldContent ) );
+                    .append( $child2.append( $containerContent ) );
             } else {
                 $container.append( $newContent );
             }
 
             self.$helper.hide();
             return $newContent;
+        },
+
+
+        toJSON: function( $element ) {
+            if ( !$element ) $element = this.$element;
+
+            var self = this
+              , $children = $element.children( '.content' )
+              , cls = self.getClass( $children )
+              , children = []
+              , contentHandler = self.getHandlerForClass( cls );
+
+            $element.children( '.content' ).each(function() {
+                children.push( self.toJSON( $(this) ) );
+            });
+            
+            return {
+                classes: $element.attr( 'class' ),
+                css: $element.attr( 'style' ),
+                children: children,
+                content: (( contentHandler ) ? contentHandler.toJSON( $element.children( '.content' ) ) : false )
+            };
+        },
+
+
+        getHandlerForClass: function( classname ) {
+            var self = this;
+
+            for ( var i = 0; i < self.options.handlers.length; i++ ) {
+                var handler = self.options.handlers[ i ];
+
+                if ( handler.iam == classname ) {
+                    return handler;
+                }
+            }
+
+            return false;
         }
     };
 
