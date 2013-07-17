@@ -30,6 +30,8 @@ app.get('/new', instance.create);
 
 app.get('/:id([A-Z0-9]{6})', instance.workspace);
 app.post('/:id([A-Z0-9]{6})', instance.upload);
+app.post('/:id([A-Z0-9]{6})/attach', instance.attach);
+app.get('/:id([A-Z0-9]{6})/:file', instance.file);
 
 http.createServer(app).listen(app.get('port'), function() {
   console.log("Server listening on port " + app.get('port'));

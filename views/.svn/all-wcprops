@@ -1,13 +1,13 @@
 K 25
 svn:wc:ra_dav:version-url
 V 38
-/svn/xgv/!svn/ver/23/xgvisualize/views
+/svn/xgv/!svn/ver/25/xgvisualize/views
 END
 header.ejs
 K 25
 svn:wc:ra_dav:version-url
 V 49
-/svn/xgv/!svn/ver/23/xgvisualize/views/header.ejs
+/svn/xgv/!svn/ver/25/xgvisualize/views/header.ejs
 END
 home.ejs
 K 25

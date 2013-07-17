@@ -2,7 +2,7 @@ var $main
   , csvHandler = {
       iam: 'chart',
       when: function( filename ) {
-        return filename.endsWith('csv');
+        return filename.endsWith('.csv');
       },
       thenRead: function( reader, file ) {
         reader.readAsText( file );
@@ -30,7 +30,7 @@ var $main
   , videoHandler = {
       iam: 'video',
       when: function( filename ) {
-        return filename.endsWith('webm') || filename.endsWith('mp4');
+        return filename.endsWith('.webm') || filename.endsWith('.mp4');
       },
       thenRead: function( reader, file ) {
         reader.readAsDataURL( file );
@@ -46,11 +46,50 @@ var $main
           type: video.attr( 'type' )
         };
       }
-    };
+    }
+  , kmlHandler = {
+    iam: 'map',
+    when: function( filename ) {
+      return filename.endsWith('.kml');
+    },
+    thenRead: function( reader, file ) {
+      reader.readAsBinaryString( file );
+    },
+    thenDo: function( $container, file, body ) {
+      $.post( location.pathname + '/attach', {
+        name: file.name,
+        type: 'application/vnd.google-earth.kml+xml',
+        data: body
+      } ).done(function( pathname ) {
+        var id = pathname.substring( pathname.lastIndexOf( '/' ) + 1 )
+          , map
+          , kml;
+
+        $( '<div/>' ).attr( 'id', id ).appendTo( $container );
+
+        map = new google.maps.Map(document.getElementById(id), {
+          center: new google.maps.LatLng(49.874819, 8.660523),
+          zoom: 10,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        });
+
+        kml = new google.maps.KmlLayer({
+          url: location.protocol + '//' + location.host + pathname,
+          map: map
+        });
+
+        if (kml.getDefaultViewport())
+          map.fitBounds(kml.getDefaultViewport());
+      });
+    },
+    toJSON: function( $container ) {
+      console.info( 'kml' );
+    }
+  };
 
 $(document).ready(function() {
   $main = $('#main-container').windowed({
-    handlers: [ csvHandler, videoHandler ]
+    handlers: [ csvHandler, videoHandler, kmlHandler ]
   });
 });
 

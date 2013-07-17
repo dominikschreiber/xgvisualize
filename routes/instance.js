@@ -2,6 +2,8 @@ var nano = require('nano')(process.env.DBHOST || 'http://dominikschreiber:BUlTB
   , instances = nano.use(process.env.DB || 'xgv');
 
 
+// ===== create a new instance ================================================
+
 exports.create = function(req, res) {
   instances.list(function (listError, listBody) {
     if (listError) {
@@ -17,7 +19,7 @@ exports.create = function(req, res) {
 
 
 function error(message, res) {
-  console.warn(message);
+  console.warn('warn', message);
   res.writeHead('Content-Type', 'text/plain');
   res.end(message);
 }
@@ -42,6 +44,9 @@ function generateInstanceID() {
 }
 
 
+// ===== render home page without known instance ==============================
+
+
 exports.workspace = function(req, res) {
   var id = req.params.id;
 
@@ -55,6 +60,9 @@ exports.workspace = function(req, res) {
     }
   });
 };
+
+
+// ===== handle file upload (DEPRECATED) ======================================
 
 
 exports.upload = function(req, res) {
@@ -80,3 +88,49 @@ exports.upload = function(req, res) {
     }
   });
 };
+
+
+// ===== handle file attachment ===============================================
+
+
+exports.attach = function(req, res) {
+  var id = req.params.id
+    , filename = sanitize(req.body.name)
+    , data = req.body.data;
+
+  instances.get(id, function(getError, getBody) {
+    if(getError) {
+      error(getError.message, res);
+    } else {
+      instances.attachment.insert(id, filename, data, req.body.type, { rev: getBody._rev }, function(attachmentInsertError, attachmentInsertBody) {
+        if (attachmentInsertError) {
+          error(attachmentInsertError.message, res);
+        } else {
+          res.end('/' + id + '/' + filename);
+        }
+      });
+    }
+  })
+};
+
+
+function sanitize( filename ) {
+  return filename.toLowerCase().replace(/[\s\/\_]/g, '-').replace('ä', 'a').replace('ö', 'o').replace('ü', 'u').replace('ß', 'ss');
+}
+
+
+// ===== serve requested file =================================================
+
+
+exports.file = function(req, res) {
+  var id = req.params.id
+    , filename = req.params.file;
+
+  instances.attachment.get(id, filename, function(attachmentGetError, attachmentGetBody) {
+    if (attachmentGetError) {
+      error(attachmentGetError.message, res);
+    } else {
+      res.send(attachmentGetBody);
+    }
+  });
+}
