@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <title><%= title %></title>
+
+  <meta charset="utf-8">
+
+  <link href="http://fonts.googleapis.com/css?family=Exo:400,700,400italic" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+
+  <script src="/js/polyfills.js"></script>
+  <script src="/js/jquery-2.0.1.min.js"></script>
+  <script src="/js/jquery-ui-1.10.3.js"></script>
+  <script src="/js/flot/jquery.flot.js"></script>
+  <script src="/js/flot/jquery.flot.resize.js"></script>
+  <script src="/js/flot/jquery.flot.crosshair.js"></script>  
+  <script src="js/jquery.windowed.js"></script>
+</head>
+
+<body class="app">
+  <header class="app-header">
+    <a href="/" class="app-brand"><%= title %></a>
+  </header>

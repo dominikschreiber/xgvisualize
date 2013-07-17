@@ -1,12 +1,12 @@
 {
   "name": "xgvisualize",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "Sandro Hardy <sandro.hardy@kom.tu-darmstadt.de>",
   "description": "Web Application to visualize sensor data from exergame labs. Simply drag&drop files to start.",
   "contributors": [
     {
       "name": "Dominik Schreiber",
-      "email": "domischreib@gmail.com",
+      "email": "dominik@goldenratiosoftware.de",
       "url": "dominikschreiber.com"
     },
     {

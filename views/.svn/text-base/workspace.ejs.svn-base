@@ -1,0 +1,6 @@
+<% include header.ejs %>
+<main id="main-container" class="container">
+
+</main>
+<script src="js/instance.js"></script>
+<% include footer.ejs %>

@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/xgv/!svn/ver/23/xgvisualize/views
+END
+header.ejs
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/xgv/!svn/ver/23/xgvisualize/views/header.ejs
+END
+home.ejs
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/xgv/!svn/ver/23/xgvisualize/views/home.ejs
+END
+footer.ejs
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/xgv/!svn/ver/23/xgvisualize/views/footer.ejs
+END
+workspace.ejs
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/xgv/!svn/ver/23/xgvisualize/views/workspace.ejs
+END

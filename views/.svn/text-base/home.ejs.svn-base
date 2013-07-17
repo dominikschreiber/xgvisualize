@@ -1,0 +1,6 @@
+<% include header.ejs %>
+<main id="main-container" class="empty container" data-text="Datei hier hinziehen, um zu beginnen">
+
+</main>
+<script src="js/home.js"></script>
+<% include footer.ejs %>
