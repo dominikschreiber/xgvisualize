@@ -56,21 +56,21 @@ function onDrop(event) {
       persist(file, e.target.result);
     };
 
-    if (isText(file.type))
+    if (isCsvOrMap(file.name))
       reader.readAsText(file);
-    else if (isBinary(file.type))
+    else if (isVideo(file.name))
       reader.readAsDataURL(file);
   }
 }
 
 
-function isText(type) {
-  return type.match('text/*');
+function isCsvOrMap(filename) {
+  return filename.endsWith('.csv') || filename.endsWith('.gpx') || filename.endsWith('.kml');
 }
 
 
-function isBinary(type) {
-  return type.match('(video/*|image/*)');
+function isVideo(filename) {
+  return filename.endsWith('.webm') || filename.endsWith('.mp4');
 }
 
 

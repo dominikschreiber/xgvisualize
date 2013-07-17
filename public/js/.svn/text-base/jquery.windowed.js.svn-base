@@ -139,7 +139,7 @@
 
 
         onDragOver: function( event, self ) {
-            var middle = self.middle( event.x, event.y, 0, 0 )
+            var middle = self.middle( event.clientX, event.clientY, 0, 0 )
               , $container = self.isOver( middle );
 
             self.consume( event );
@@ -159,7 +159,7 @@
 
 
         onDrop: function( event, self ) {
-            var middle = self.middle(event.x, event.y, 0, 0)
+            var middle = self.middle(event.clientX, event.clientY, 0, 0)
               , files = event.dataTransfer.files;
 
             self.consume( event );
