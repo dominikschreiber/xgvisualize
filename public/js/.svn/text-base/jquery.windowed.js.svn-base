@@ -1,4 +1,5 @@
 ;
+
 (function ($, window, document, undefined ) {
     var pluginName = "windowed",
         defaults = {
@@ -6,7 +7,7 @@
             minHeight: 150,
             // windows are only split if both new elements are wider than this value
             minWidth: 150, 
-            // the mouse pointer must be that much pixels from the border to trigger resizing
+            // the mouse pointer must be that much pixels away from the border to trigger resizing
             resizeDistance: 10,
             // this is an array of objects of the form
             // {
@@ -16,11 +17,19 @@
             //   thenDo: function( $container, file, body ), -> and it should be processed that way
             //   toJSON: function( $container ) -> convert content in $container to JSON
             // }
-            handlers: []
+            handlers: [],
+            // selectors of elements that 
+            controls: { backward: [], forward: [] },
+            // base uri to which files, expected to end with '/'
+            uploadUrl: false
         };
 
 
     function Plugin( element, options ) {
+        this.xResize = 0;
+        this.yResize = 0;
+        this.oldEdge = false;
+        this.$oldElement = false;
         this.element = element;
         this.$element = $(element);
         this.options = $.extend( {}, defaults, options );
@@ -32,6 +41,8 @@
         this.startX = 0;
         this.startY = 0;
         this.$helper = false;
+        this.speed = 100; // in ms
+        this.position = 0; // in ms
 
         this.init();
     }
@@ -44,12 +55,22 @@
             var self = this;
 
             $( window ).keydown( function( event ) {
-                if ( event.which == 68 ) { // d-key pressed
-                    self.dPressed = true;
+                switch ( event.which ) {
+                    case 68: // d-key pressed
+                        self.dPressed = true; 
+                        break;
+                    case 37: // arrow left pressed
+                        self.moveBackward();
+                        break;
+                    case 39: // arrow right pressed
+                        self.moveForward();
+                        break;
                 }
             }).keyup( function( event ) {
-                if ( event.which == 68 ) { // d-key released
-                    self.dPressed = false;
+                switch ( event.which) {
+                    case 68: // d-key released
+                        self.dPressed = false; 
+                        break;
                 }
             }).mousedown( function( event ) {
                 if ( event.which == 1 ) { // left button pressed
@@ -66,7 +87,7 @@
                   , type = border.border;
 
                 if ( type ) {
-                    if ( !border.isOuterBorder || !self.isOriginBorder( type ) ) {
+                    if ( !border.isOuterBorder) {
                         if ( self.isHorizontalBorder( type ) ) {
                             self.$element.css( 'cursor', 'e-resize' );
                         } else if (self.isVerticalBorder(type)) {
@@ -85,7 +106,7 @@
                       , height = ( self.start.isOuterBorder ) ? self.$element.width() : self.start.element.width()
                       , percentY = 100 * y / height;
 
-                    self.resize(self.start.element, percentX, percentY, self.start);
+                    self.resize(self.start.element, x, y, self.start);
 
                     self.start = self.nearBorder(event.pageX, event.pageY);
                     self.startX = event.pageX;
@@ -115,6 +136,8 @@
                 self.onDrop( event, self );
             }, false);
 
+            self.setupContainer( self.$element );
+
             self.$helper = $('<div id="helper-container"/>')
                 .appendTo( self.$element )
                 .hide()
@@ -124,6 +147,49 @@
                     height: 150,
                     width: 300
                 });
+
+            $( '#control-speed' ).val( 100 ).change( function() {
+                self.speed = parseInt( $( this ).val() ) || 100;
+            } );
+            $( '#control-backward' ).click( function() { 
+                self.moveBackward(); 
+            } );
+            $( '#control-forward' ).click( function() {
+                self.moveForward(); 
+            } );
+        },
+
+
+        moveForward: function() {
+            var self = this;
+
+            self.updatePosition( self.speed );
+            self.move();
+        },
+
+
+        moveBackward: function() {
+            var self = this;
+
+            self.updatePosition( -self.speed );
+            self.move();
+        },
+
+
+        updatePosition: function( delta ) {
+            var self = this;
+            self.position = Math.max( self.position + delta, 0 );
+        },
+
+
+        move: function() {
+            var self = this;
+
+            $( '.container.synced' ).each( function() {
+                var $content = $( this ).children( '.content' );
+
+                self.getHandler( $content ).jump( $content, self.position );
+            } );
         },
 
 
@@ -172,7 +238,7 @@
                       , file = files[ i ];
 
                     reader.onerror = function( evt ) {
-                        switch ( evt.target.error.code) {
+                        switch ( evt.target.error.code ) {
                             case 1: console.warn('File "' + file.name + '" not found.'); break;
                             case 2: console.warn('File "' + file.name + '" has changed on disk. Please retry.'); break;
                             case 3: console.warn('Upload of file "' + file.name + '" has been cancelled.'); break;
@@ -188,18 +254,29 @@
                               , $newContainer;
 
                             if ( handler.when( file.name ) ) {
-                                $newContainer = self.splitContainer( $over, self.splitDirection( $over, middle ) );
-                                handler.thenDo( $newContainer.addClass( handler.iam ), file, evt.target.result );
+                                var rightHandler = handler;
+
+                                $.post( self.options.uploadUrl( file.name ), { 
+                                        data: evt.target.result, 
+                                        type: handler.type( file ) 
+                                    }, function( pathname ) {
+                                        $newContainer = self.splitContainer( $over, self.splitDirection( $over, middle ) );
+                                        rightHandler.render( 
+                                            $newContainer.addClass( rightHandler.iam ), 
+                                            pathname, 
+                                            pathname.substring( pathname.lastIndexOf( '/' ) + 1 ) 
+                                        );
+                                    } ); 
                             }
                         }
                     };
 
 
-                    for ( var j = 0; j < self.options.handlers.length; j++ ) {
-                        var handler = self.options.handlers[ j ];
+                    for ( var i = 0; i < self.options.handlers.length; i++ ) {
+                        var handler = self.options.handlers[ i ];
 
                         if ( handler.when( file.name ) ) {
-                            handler.thenRead( reader, file );
+                            handler.read( reader, file );
                         }
                     }
                 }
@@ -237,15 +314,7 @@
 
 
         lowest: function ( container ) {
-            var self = this
-              , $container = $( container )
-              , $children = $container.children().not( '.content, #helper-container' );
-
-            if ( $children.length < 2 ) {
-                return $container;
-            } else {
-                return [ self.lowest( $children.get( 0 ) ), self.lowest( $children.get( 1 ) ) ];
-            }
+            return $( '.dropzone' );
         },
 
 
@@ -285,13 +354,11 @@
 
         nearBorder: function( x, y ) {
             var self = this
-              , lowest = self.lowest( self.$element )
-              , flat = self.flatten(lowest)
               , element = false
               , border = false
               , isOuterBorder = false;
 
-            $.each(flat, function(index, value) {
+            $( '.dropzone ').each(function(index, value) {
                 var $entry = $(value)
                   , top = $entry.offset().top
                   , left = $entry.offset().left
@@ -360,13 +427,20 @@
 
 
         getClass: function ( $element ) {
-            var self =  this;
+            return this.getHandler( $element ).iam;
+        },
 
-            $.each(self.options.handlers, function( index, value ) {
-                if ( $element.hasClass( value.iam ) ) {
-                    return value.iam;
+
+        getHandler: function( $element ) {
+            var self = this
+              , handler;
+
+            for ( var i = 0; i < self.options.handlers.length; i++ ) {
+                handler = self.options.handlers[ i ];
+                if ( $element.hasClass( handler.iam ) ) {
+                    return handler;
                 }
-            });
+            }
 
             return false;
         },
@@ -433,55 +507,58 @@
               , otherWidth;
 
             if ( border.isOuterBorder ) {
-                if ( self.isOriginBorder( border.border ) ) {
-                    return false;
-                } else if ( self.isVerticalBorder( border.border ) ) {
-                    self.$element.width( self.$element.width() * ( 100 + xSizeInPx ) / 100 );
-                } else if ( self.isHorizontalBorder( border.border ) ) {
-                    self.$element.height( self.$element.height() * ( 100 + ySizeInPx ) / 100 );
-                }
+                return false;
             } else {
+
                 $parent = $element.parent();
                 percentageHeight = 100 * $element.height() / $parent.height();
                 percentageWidth = 100 * $element.width() / $parent.width();
                 $other = $element.siblings( '.container' );
 
                 if ( border.border == 'top' && self.getChildPosition( $element ) == 'bottom' ) {
-                    height = percentageHeight * ( 100 - ySizeInPx ) / 100;
-                    otherHeight = 100 - height;
 
-                    $element.height( height + '%' );
+                    height = percentageHeight - (100 * ySizeInPx) / $parent.height();
+                    otherHeight = 100 - height;
+                    
+                    $element.height( height + '%' )
+                        .css( 'top', otherHeight + '%');
                     $other.height( otherHeight + '%' )
-                        .css( 'top', otherHeight + '%' );
+                        .css( 'top', 0 + '%' );
+
+                    return true;
                 } else if ( border.border == 'bottom' && self.getChildPosition( $element ) == 'top' ) {
-                    height = percentageHeight * ( 100 + ySizeInPx ) / 100;
+                    height = percentageHeight + (100 * ySizeInPx) / $parent.height();
                     otherHeight = 100 - height;
 
-                    $element.height( height + '%' );
+                    $element.height( height + '%' )
+                        .css( 'top', 0 + '%' );
                     $other.height( otherHeight + '%' )
                         .css( 'top', height + '%' );
+
+                    return true;
                 } else if ( border.border == 'left' && self.getChildPosition( $element ) == 'right' ) {
-                    width = percentageWidth * ( 100 - xSizeInPx ) / 100;
+
+                    width = percentageWidth - (100 * xSizeInPx) / $parent.width();
                     otherWidth = 100 - width;
 
-                    $element.width( width + '%' );
-                    $other.width ( otherWidth + '%' )
+                    $element.width( width + '%' )
                         .css( 'left', otherWidth + '%' );
+                    $other.width ( otherWidth + '%' )
+                        .css( 'left', 0 + '%' );
+
+                    return true;
                 } else if ( border.border == 'right' && self.getChildPosition( $element ) == 'left' ) {
-                    width = percentageWidth * ( 100 + xSizeInPx ) / 100;
+
+                    width = percentageWidth + (100 * xSizeInPx) / $parent.width();
                     otherWidth = 100 - width;
 
-                    $element.width( width + '%' );
+                    $element.width( width + '%' )
+                        .css( 'left', 0 + '%' );
                     $other.width( otherWidth + '%' )
                         .css( 'left', width + '%' );
+
+                    return true;
                 } else {
-                    if ( $parent.hasClass( 'vertical' ) ) {
-                        xSizeInPx *= $element.width() / 100;
-                        xSizeInPx /= $parent.width() / 100;
-                    } else if ($parent.hasClass( 'horizontal' ) ) {
-                        ySizeInPx *= $element.height() / 100;
-                        ySizeInPx /= $parent.height() / 100;
-                    }
                     self.resize($parent, xSizeInPx, ySizeInPx, border);
                 }
             }
@@ -494,14 +571,14 @@
               , $parent = $element.parent()
               , $other = $element.siblings( '.container' );
 
-            if ( $parent.hasClass( 'vertical' ) ) {
+            if ( $parent.hasClass( 'horizontal' ) ) {
                 if ( $element.css( 'left' ) != '0px' ) {
                     position = 'right';
                 }
                 if ( $other.css( 'left' ) != '0px' ) {
                     position = 'left';
                 }
-            } else if ( $parent.hasClass( 'horizontal' ) ) {
+            } else if ( $parent.hasClass( 'vertical' ) ) {
                 if ( $element.css( 'top' ) != '0px' ) {
                     position = 'bottom';
                 }
@@ -553,35 +630,39 @@
             }
         },
 
-
         drawHelperBox: function( $element, edge ) {
             var self = this;
 
-            if ( $element.is( self.$element ) && $element.children('.content, .container').length === 0 ) {
-                self.$helper.width( $element.width() )
-                    .height( $element.height() )
-                    .css({
-                        left: $element.offset().left,
-                        top: 0
-                    });
-            } else {
-                if ( self.isVerticalBorder( edge ) ) {
+            if( ! ( $element.is(self.$oldElement) && edge == self.oldEdge ) ) {
+                self.$oldElement = $element;
+                self.oldEdge = edge;
+
+                if ( $element.is( self.$element ) && $element.children('.content, .container').length === 0 ) {
                     self.$helper.width( $element.width() )
-                        .height( $element.height() / 2 )
-                        .css( {
-                            left: $element.offset().left,
-                            top: $element.offset().top - self.$element.offset().top + (( edge == 'bottom' ) ? $element.height() / 2 : 0)
-                        } );
-                } else if ( self.isHorizontalBorder( edge ) ) {
-                    self.$helper.width( $element.width() / 2 )
                         .height( $element.height() )
-                        .css( {
-                            left: $element.offset().left + (( edge == 'right' ) ? $element.width() / 2 : 0),
-                            top: $element.offset().top - self.$element.offset().top
-                        } );
+                        .css({
+                            left: $element.offset().left,
+                            top: 0
+                        });
+                } else {
+                    if ( self.isVerticalBorder( edge ) ) {
+                        self.$helper.width( $element.width() )
+                            .height( $element.height() / 2 )
+                            .css( {
+                                left: $element.offset().left,
+                                top: $element.offset().top - self.$element.offset().top + (( edge == 'bottom' ) ? $element.height() / 2 : 0 )
+                            } );
+                    } else if ( self.isHorizontalBorder( edge ) ) {
+                        self.$helper.width( $element.width() / 2 )
+                            .height( $element.height() )
+                            .css( {
+                                left: $element.offset().left + (( edge == 'right' ) ? $element.width() / 2 : 0 ),
+                                top: $element.offset().top - self.$element.offset().top
+                            } );
+                    }
                 }
+                self.$helper.show();
             }
-            self.$helper.show();
         },
 
 
@@ -599,22 +680,8 @@
               , width = ( self.isHorizontalBorder( edge ) ) ? '50%' : '100%'
               , height = ( self.isVerticalBorder( edge ) ) ? '50%' : '100%'
               , index = parseInt( $container.css( 'z-index' ), 10 ) + 1
-              , $child1 = $( '<div class="container"/>' ).css( {
-                    position: 'absolute',
-                    top: top1,
-                    left: left1,
-                    height: height,
-                    width: width,
-                    'z-index': index
-                } ).addClass( newClasses )
-              , $child2 = $( '<div class="container"/>' ).css( {
-                    position: 'absolute',
-                    top: top2,
-                    left: left2,
-                    height: height,
-                    width: width,
-                    'z-index': index
-                } ).addClass( newClasses )
+              , $child1 = self.newContainer( top1, left1, height, width, index )
+              , $child2 = self.newContainer( top2, left2, height, width, index )
               , splitDirection = ( self.isHorizontalBorder( edge ) ) ? 'horizontal' : 'vertical'
               , $newContent = $( '<div class="content"/>' )
               , $containerContent = $container.children( '.content' );
@@ -630,16 +697,51 @@
 
                 $container.remove('.content');
 
-                $container.removeClass( 'bordered' )
+                $container.removeClass( 'bordered dropzone' )
                     .addClass( splitDirection )
-                    .append( $child1.append( $newContent ) )
-                    .append( $child2.append( $containerContent ) );
+                    .append( $child1.append( $newContent ).addClass( 'dropzone ') )
+                    .append( $child2.append( $containerContent ).addClass( 'dropzone ') );
+
+                self.$element.removeClass("dropzone");
+                $child1.addClass("dropzone").disableSelection();
+                $child2.addClass("dropzone").disableSelection();
             } else {
                 $container.append( $newContent );
             }
 
             self.$helper.hide();
             return $newContent;
+        },
+
+
+        newContainer: function( top, left, height, width, zIndex, classes ) {
+            var self = this,
+                $container = $( '<div class="container"/>' ).css( {
+                    position: 'absolute',
+                    top: top,
+                    left: left,
+                    height: height,
+                    width: width,
+                    'z-index': zIndex
+                } ).addClass( classes );
+
+            self.setupContainer( $container );
+
+            return $container;
+        },
+
+
+        setupContainer: function( $container ) {
+            var self = this;
+
+            $( '<div class="icon sync"/>')
+                .css( 'z-index', parseInt( $container.css( 'z-index' ) + 1 ) )
+                .appendTo( $container.disableSelection() )
+                .click( function() {
+                    $container.toggleClass( 'synced' );
+                    $( this ).toggleClass( 'synced' );
+                    self.move();
+                } );
         },
 
 

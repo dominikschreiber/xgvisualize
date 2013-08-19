@@ -506,41 +506,38 @@ function splitDirection(container, middle) {
 // DONE
 // draws the helper box to show the user where the new element will be dropped
 function drawHelperBox(container, splitDirection) {
+	console.log("drawing");
 	if(container[0].id == "main-container" && !container.hasClass('Chart') && !container.hasClass('Map') && !container.hasClass('Video')) {
-		$("#helper-container").css('width', container[0].clientWidth);
-		$("#helper-container").css('height', container[0].clientHeight);
-		$("#helper-container").css('top', container.offset().top);
-		$("#helper-container").css('left', container.offset().left);
+		$("#helper-container")
+			.css('width', container[0].clientWidth)
+			.css('height', container[0].clientHeight)
+			.css('top', container.offset().top)
+			.css('left', container.offset().left);
 	} else {
 		if(splitDirection == 0) {
 			console.log("split direction computation failed");
 		} else {
 			if(splitDirection=="top" || splitDirection == "bot") {
-				$("#helper-container").css('width', container[0].clientWidth);
-				$("#helper-container").css('height', container[0].clientHeight / 2);
+				$("#helper-container").css('width', container[0].clientWidth).css('height', container[0].clientHeight / 2);
 				if(splitDirection=="top") {
-					$("#helper-container").css('top', container.offset().top);
-					$("#helper-container").css('left', container.offset().left);
+					$("#helper-container").css('top', container.offset().top).css('left', container.offset().left);
 				}
 				if(splitDirection=="bot") {
-					$("#helper-container").css('top', container.offset().top + container[0].clientHeight / 2);
-					$("#helper-container").css('left', container.offset().left);
+					$("#helper-container").css('top', container.offset().top + container[0].clientHeight / 2).css('left', container.offset().left);
 				}
 			}
 			if(splitDirection=="left" || splitDirection == "right") {
-				$("#helper-container").css('width', container[0].clientWidth / 2);
-				$("#helper-container").css('height', container[0].clientHeight);
+				$("#helper-container").css('width', container[0].clientWidth / 2).css('height', container[0].clientHeight);
 				if(splitDirection=="left") {
-					$("#helper-container").css('top', container.offset().top);
-					$("#helper-container").css('left', container.offset().left);
+					$("#helper-container").css('top', container.offset().top).css('left', container.offset().left);
 				}
 				if(splitDirection=="right") {
-					$("#helper-container").css('top', container.offset().top);
-					$("#helper-container").css('left', container.offset().left + container[0].clientWidth / 2);
+					$("#helper-container").css('top', container.offset().top).css('left', container.offset().left + container[0].clientWidth / 2);
 				}
 			}
 		}
 	}
+	console.log("lalala");
 	$("#helper-container").show();
 }
 

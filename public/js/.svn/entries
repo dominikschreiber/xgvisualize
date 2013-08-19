@@ -1,15 +1,15 @@
 10
 
 dir
-25
+30
 https://dev.kom.e-technik.tu-darmstadt.de/svn/xgv/xgvisualize/public/js
 https://dev.kom.e-technik.tu-darmstadt.de/svn/xgv
 
 
 
-2013-07-17T14:42:59.820044Z
-25
-dominikschreiber
+2013-08-01T13:20:01.379140Z
+30
+michaelbraeunlein
 
 
 
@@ -28,14 +28,14 @@ dad1a3f4-4c17-4f22-b3ad-d27bf453766f
 
 instance.js
 file
+31
 
 
 
-
-2013-07-17T14:29:32.000000Z
-2b7ecc00b00e346af849fc6875267ef3
-2013-07-17T14:42:59.820044Z
-25
+2013-08-19T13:01:52.000000Z
+260dacca14b81e4f863ae30c12178ccc
+2013-08-19T13:34:15.147949Z
+31
 dominikschreiber
 
 
@@ -58,7 +58,7 @@ dominikschreiber
 
 
 
-2970
+5371
 
 home.js
 file
@@ -204,14 +204,14 @@ dominikschreiber
 
 jquery.windowed.js
 file
+31
 
 
 
-
-2013-07-17T11:29:04.000000Z
-70235cf111da6c456ce265b3c92c2db2
-2013-07-17T11:42:42.367855Z
-24
+2013-08-19T08:25:28.000000Z
+11cd47b0bab1009808a484d804ee6410
+2013-08-19T13:34:15.147949Z
+31
 dominikschreiber
 
 
@@ -234,5 +234,5 @@ dominikschreiber
 
 
 
-25555
+28426
 

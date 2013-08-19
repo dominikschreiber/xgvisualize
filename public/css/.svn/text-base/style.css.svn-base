@@ -27,7 +27,7 @@ body {
   background-color: #16181a;
 }
 .app-brand {
-  display: block;
+  display: inline-block;
   padding: 14px;
   height: 50px;
   width: 200px;
@@ -40,6 +40,50 @@ body {
 }
 .app-brand:hover {
   background-color: rgba(255, 255, 255, 0.1);
+}
+.app-controls {
+  float: right;
+  overflow: auto;
+  color: #ffffff;
+}
+.app-controls > * {
+  float: left;
+  margin: 0 1em;
+}
+.app-controls input[type=text],
+.app-controls input[type=number] {
+  margin: 0 .5em;
+  padding: .25em .5em;
+  width: 5em;
+  line-height: 1.8;
+  border: 0px solid transparent;
+  border-radius: 2px;
+}
+.app-controls .icon {
+  margin-top: 18px;
+  margin-bottom: 18px;
+}
+.app-controls label {
+  margin: 13px 0;
+}
+.icon {
+  display: block;
+  width: 14px;
+  height: 14px;
+  background-image: url('/img/glyphicons-halflings.png');
+  background-repeat: no-repeat;
+}
+.icon.inverse {
+  background-image: url('/img/glyphicons-halflings-white.png');
+}
+.icon.forward {
+  background-position: -335px -73px;
+}
+.icon.backward {
+  background-position: -241px -73px;
+}
+.icon.sync {
+  background-position: -336px -122px;
 }
 #main-container {
   height: 100%;
@@ -87,4 +131,13 @@ body {
   display: block;
   width: 100%;
   height: 100%;
+}
+.sync {
+  position: absolute;
+  top: 1em;
+  right: 1em;
+  opacity: .1;
+}
+.sync.synced {
+  opacity: 1;
 }

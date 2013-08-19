@@ -1,7 +1,19 @@
 K 25
 svn:wc:ra_dav:version-url
 V 43
-/svn/xgv/!svn/ver/23/xgvisualize/public/img
+/svn/xgv/!svn/ver/28/xgvisualize/public/img
+END
+glyphicons-halflings-white.png
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/xgv/!svn/ver/28/xgvisualize/public/img/glyphicons-halflings-white.png
+END
+glyphicons-halflings.png
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/xgv/!svn/ver/28/xgvisualize/public/img/glyphicons-halflings.png
 END
 favicon.ico
 K 25

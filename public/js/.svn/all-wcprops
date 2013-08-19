@@ -1,13 +1,13 @@
 K 25
 svn:wc:ra_dav:version-url
 V 42
-/svn/xgv/!svn/ver/25/xgvisualize/public/js
+/svn/xgv/!svn/ver/30/xgvisualize/public/js
 END
 instance.js
 K 25
 svn:wc:ra_dav:version-url
 V 54
-/svn/xgv/!svn/ver/25/xgvisualize/public/js/instance.js
+/svn/xgv/!svn/ver/31/xgvisualize/public/js/instance.js
 END
 home.js
 K 25
@@ -37,5 +37,5 @@ jquery.windowed.js
 K 25
 svn:wc:ra_dav:version-url
 V 61
-/svn/xgv/!svn/ver/24/xgvisualize/public/js/jquery.windowed.js
+/svn/xgv/!svn/ver/31/xgvisualize/public/js/jquery.windowed.js
 END
