@@ -1,27 +1,28 @@
-var nano = require('nano')(process.env.DBHOST || 'http://dominikschreiber:BUlTBiQIXz@81.169.133.153:5984')
-  , instances = nano.use(process.env.DB || 'xgv');
+var nano = require( 'nano' )( process.env.DBHOST || 'http://dominikschreiber:BUlTBiQIXz@81.169.133.153:5984' )
+  , instances = nano.use( process.env.DB || 'xgv' );
 
 
 // ===== create a new instance ================================================
 
-exports.create = function(req, res) {
-  instances.list(function (listError, listBody) {
-    if (listError) {
-      error(listError.message, res);
+exports.create = function( req, res ) {
+  instances.list( function ( listError, listBody ) {
+    if ( listError ) {
+      error( listError, res, 500 );
     } else {
-      var id = generateNewInstanceID(listBody.rows);
-      instances.insert({}, id, function(insertError, insertBody) {
-        res.send(id);
+      var id = generateNewInstanceID( listBody.rows );
+      instances.insert( {}, id, function( insertError, insertBody ) {
+        res.send( id );
       });
     }
   });
 };
 
 
-function error(message, res) {
-  console.warn('warn', message);
-  res.writeHead('Content-Type', 'text/plain');
-  res.end(message);
+function error( error, res, statuscode ) {
+  console.warn( '[warn]', statuscode, error.message, '\n' + error.stacktrace.join('\n') );
+  res.type( 'text/plain' );
+  if ( statuscode ) res.status( statuscode );
+  res.send( error.message );
 }
 
 
@@ -52,7 +53,7 @@ exports.workspace = function(req, res) {
 
   instances.get(id, function(getError, getBody) {
     if (getError) {
-      error(getError.message, res);
+      error(getError, res, 400);
     } else {
       res.render('workspace', {
         title: 'xgvisualize'
@@ -71,7 +72,7 @@ exports.upload = function(req, res) {
 
   instances.get(id, function(getError, getBody) {
     if (getError) {
-      error(getError.message, res);
+      error(getError, res, 400);
     } else {
       getBody[data.name] = {
         type: data.type,
@@ -80,7 +81,7 @@ exports.upload = function(req, res) {
 
       instances.insert(getBody, id, function(insertError, insertBody) {
         if (insertError) {
-          error(insertError.message, res);
+          error(insertError, res, 500);
         } else {
           res.send('successfully uploaded "' + data.name + '"');
         }
@@ -93,24 +94,35 @@ exports.upload = function(req, res) {
 // ===== handle file attachment ===============================================
 
 
-exports.attach = function(req, res) {
+exports.attach = function( req, res ) {
   var id = req.params.id
-    , filename = sanitize(req.body.name)
+    , filename = sanitize( req.params.file )
     , data = req.body.data;
 
-  instances.get(id, function(getError, getBody) {
-    if(getError) {
-      error(getError.message, res);
+  instances.get( id, function( getError, getBody ) {
+    if( getError ) {
+      error( getError, res, 400 );
     } else {
-      instances.attachment.insert(id, filename, data, req.body.type, { rev: getBody._rev }, function(attachmentInsertError, attachmentInsertBody) {
-        if (attachmentInsertError) {
-          error(attachmentInsertError.message, res);
-        } else {
-          res.end('/' + id + '/' + filename);
-        }
-      });
+      if ( data.indexOf( 'data:' ) === 0 ) {
+        getBody[ filename ] = data;
+        instances.insert( getBody, id, function( insertError, insertBody ) {
+          if ( insertError ) {
+            error( insertError, res, 500 );
+          } else {
+            res.send( data );
+          }
+        } );
+      } else {
+        instances.attachment.insert( id, filename, req.body.data, req.body.type, { rev: getBody._rev }, function(attachmentInsertError, attachmentInsertBody) {
+          if (attachmentInsertError) {
+            error( attachmentInsertError, res, 500 );
+          } else {
+            if( attachmentInsertBody.ok ) res.send( '/' + attachmentInsertBody.id + '/' + filename );
+          }
+        });
+      }
     }
-  })
+  });
 };
 
 
@@ -119,18 +131,37 @@ function sanitize( filename ) {
 }
 
 
+function typeFromName( filename ) {
+    switch ( filename.substring( filename.lastIndexOf( '.' ) + 1 ) ) {
+      case 'webm': return 'video/webm';
+      case 'mp4': return 'video/mp4';
+      case 'kml': return 'application/vnd.google-earth.kml+xml';
+      case 'csv': return 'text/csv';
+      default: return 'text/plain';
+    }
+}
+
+
 // ===== serve requested file =================================================
 
 
 exports.file = function(req, res) {
-  var id = req.params.id
-    , filename = req.params.file;
+  var fileEnding = req.params.file.substring( req.params.file.lastIndexOf( '.' ) + 1 );
 
-  instances.attachment.get(id, filename, function(attachmentGetError, attachmentGetBody) {
-    if (attachmentGetError) {
-      error(attachmentGetError.message, res);
-    } else {
-      res.send(attachmentGetBody);
-    }
-  });
+  if ( fileEnding == 'webm' || fileEnding == 'mp4' ) {
+    instances.get( req.params.id, function( getError, getBody ) {
+      // TODO
+      if ( getError ) {
+        error( getError, res, 400 );
+      } else {
+        res.type( 'video/' + fileEnding );
+        res.send( new Buffer( getBody[ req.params.file ], 'base64' ) );
+      }
+    } );
+  } else {
+    instances.attachment.get(req.params.id, req.params.file, function( attachmentGetError, attachmentGetBody ) {
+      if ( attachmentGetError ) error( attachmentGetError );
+      else res.send( attachmentGetBody );
+    } );
+  }
 }

@@ -681,7 +681,7 @@
               , height = ( self.isVerticalBorder( edge ) ) ? '50%' : '100%'
               , index = parseInt( $container.css( 'z-index' ), 10 ) + 1
               , $child1 = self.newContainer( top1, left1, height, width, index )
-              , $child2 = self.newContainer( top2, left2, height, width, index )
+              , $child2 = self.newContainer( top2, left2, height, width, index ).addClass( ( $container.is( '.synced' ) ? 'synced' : '' ) )
               , splitDirection = ( self.isHorizontalBorder( edge ) ) ? 'horizontal' : 'vertical'
               , $newContent = $( '<div class="content"/>' )
               , $containerContent = $container.children( '.content' );
@@ -695,16 +695,16 @@
                     return false;
                 }
 
-                $container.remove('.content');
+                $container.remove( '.content' );
 
-                $container.removeClass( 'bordered dropzone' )
+                $container.removeClass( 'bordered dropzone synced' )
                     .addClass( splitDirection )
                     .append( $child1.append( $newContent ).addClass( 'dropzone ') )
                     .append( $child2.append( $containerContent ).addClass( 'dropzone ') );
 
-                self.$element.removeClass("dropzone");
-                $child1.addClass("dropzone").disableSelection();
-                $child2.addClass("dropzone").disableSelection();
+                self.$element.removeClass( 'dropzone' );
+                $child1.addClass( 'dropzone' ).disableSelection();
+                $child2.addClass( 'dropzone' ).disableSelection();
             } else {
                 $container.append( $newContent );
             }
@@ -739,7 +739,6 @@
                 .appendTo( $container.disableSelection() )
                 .click( function() {
                     $container.toggleClass( 'synced' );
-                    $( this ).toggleClass( 'synced' );
                     self.move();
                 } );
         },

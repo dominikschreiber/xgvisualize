@@ -1,5 +1,13 @@
 <% include header.ejs %>
-<main id="main-container" class="container">
+<header class="app-header">
+  <a href="/" class="app-brand"><%= title %></a>
+  <div class="app-controls">
+	<a href="#" id="control-backward" class="icon inverse backward"></a>
+  	<label><input id="control-speed" type="number" size="5"/>ms</label>
+	<a href="#" id="control-forward" class="icon inverse forward"></a>
+  </div>
+</header>
+<main id="main-container" class="container dropzone">
 
 </main>
 <script src="js/instance.js"></script>

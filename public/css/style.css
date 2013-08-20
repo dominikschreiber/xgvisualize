@@ -133,11 +133,15 @@ body {
   height: 100%;
 }
 .sync {
+  display: none;
+}
+.container.dropzone > .sync {
+  display: block;
   position: absolute;
   top: 1em;
   right: 1em;
   opacity: .1;
 }
-.sync.synced {
+.container.dropzone.synced > .sync {
   opacity: 1;
 }

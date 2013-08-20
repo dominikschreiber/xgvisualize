@@ -5,6 +5,8 @@ var $main
 
       plots: {},
 
+      selectionBaseSize: 200,
+
       iam: 'chart',
 
       when: function( filename ) {
@@ -15,32 +17,53 @@ var $main
         reader.readAsBinaryString( file );
       },
 
-      render: function( $content, pathname, id ){
+      render: function( $content, pathname, filename ){
         var self = this;
 
-        id = unique( id );
+        id = unique( filename );
         self.plots[ id ] = {};
 
         $.get( pathname ).done( function( body ) {
-          var csv = toPlottableCsv( body );
+          var csv = toFlotSeriesFormat( body )
+            , options = {
+                crosshair: {
+                  mode: 'x',
+                },
+                selection: {
+                  mode: 'x'
+                },
+                grid: {
+                  hoverable: false,
+                  autoHighlight: false
+                }
+              };
 
-          self.plots[ id ].startX = csv[ 0 ][ 0 ];
+          self.plots[ id ].start = csv[ 0 ][ 0 ];
+          self.plots[ id ].data = csv;
           self.plots[ id ].plot = $.plot( $content.attr( 'id', id ).resizable(), [ {
-            data: csv
-          } ], {
-            crosshair: {
-              mode: 'xy',
-              color: 'rgba(50, 150, 190, .5)'
-            },
-            grid: {
-              hoverable: false,
-              autoHighlight: false
-            }
+            data: csv,
+            label: filename
+          } ], options );
+
+          $content.bind( 'plotselected', function( event, ranges ) {
+            var to = Math.max( ranges.xaxis.to, ranges.xaxis.from + 0.00001 );
+
+            self.plots[ id ].plot = $.plot( 
+              $content, 
+              [ { 
+                data: self.plots[ id ].data.slice( ranges.xaxis.from, to ),
+                label: filename + '\n[ ' + ranges.xaxis.from.toFixed() + ' : ' + to.toFixed() + ' ]'
+              } ], 
+              $.extend( true, options, {
+                xaxis: {
+                  min: ranges.xaxis.from + 1,
+                  max: to
+                }
+              } ) );
+            self.plots[ id ].plot.highlight( 0, self.plots[ id ].currentIndexInSelection );
           } );
-          self.plots[ id ].plot.lockCrosshair( {
-            x: csv[ 0 ][ 0 ],
-            y: csv[ 0 ][ 1 ]
-          } );
+
+          self.jump( $content, 0 );
         } );
       },
 
@@ -49,34 +72,44 @@ var $main
       },
 
       /**
-       * plots a xy-crosshair aiming at the value at the given position
-       * into the chart in $content.
-       *
        * WARNING: makes heavy assumptions that the chart in $content has
        * an entry for _every_millisecond_. Once that is not the case, the
        * computation has to be generalized (TODO).
        *
-       * @param $content the jQuery Object containing the plotted chart.
-       *        is assumed to have a unique ID that is already recognized
-       *        in self.plots (to get the plot object from there)
-       * @param position the position in milliseconds from the start value
-       *        to be highlighted.
+       * @param $content 
+       *        the jQuery Object containing the plotted chart. is assumed
+       *        to have a unique ID that is already recognized in self.plots
+       *        (to get the plot object from there)
+       * @param position
+       *        the position in milliseconds from the start value to be
+       *        highlighted.
        */
       jump: function( $content, position ) {
         var self = this
           , id = $content.attr( 'id' )
-          , data = self.plots[ id ]
-          , plot = data.plot
-          , plotData = plot.getData()[ 0 ].data
-          , relativePosition = Math.min( Math.max( data.startX + position, 1 ), plotData.length - 1 ) - 1;
+          , info = self.plots[ id ]
+          , plot = info.plot
+          , center = Math.min( Math.max( info.start + position, 0 ), info.data.length - 1 ) - 1 // 0-indexed
+          , selectionSize = self.selectionBaseSize / Math.pow( 2, $content.parentsUntil( '#main-container' ).length )
+          , indexInSelection = Math.min( center, Math.max( selectionSize - ( info.data.length - 1 - center ), 100 ) )
+          , leftBound = center - selectionSize / 2
+          , rightBound = center + selectionSize / 2
+          , fromPosition = Math.max( Math.min( leftBound, info.data.length - selectionSize - 1 ), 0 )
+          , toPosition = Math.max( Math.min( rightBound, info.data.length - 1 ), selectionSize );
 
-        plot.lockCrosshair( {
-          x: relativePosition + 1,
-          y: plotData[ relativePosition ][ 1 ]
+        info.currentIndexInSelection = indexInSelection;
+
+        plot.setSelection( {
+          xaxis: {
+            from: fromPosition,
+            to: toPosition
+          }
         } );
       },
 
-      toJSON: function( $content ) {}
+      toJSON: function( $content ) {
+        return JSON.stringify( self.plots[ $content.attr( 'id' ) ].data );
+      }
     }
 
 
@@ -152,22 +185,24 @@ var $main
     toJSON: function( $content ) {}
   };
 
+
 /**
  * converts a csv file to a json array that can
  * be plotted by flotcharts
  *
- * @param plain the plain csv file content, i.e.
- *     "1;123\n" +
- *     "2;456\n" +
- *     "3;789"
+ * @param plain 
+ *        the plain csv file content, i.e.
+ *            "1;123\n" +
+ *            "2;456\n" +
+ *            "3;789"
  * @return the converted array, i.e.
- *     [
- *       [ 1, 123 ],
- *       [ 2, 456 ],
- *       [ 3, 789 ]
- *     ]
+ *            [
+ *              [ 1, 123 ],
+ *              [ 2, 456 ],
+ *              [ 3, 789 ]
+ *            ]
  */
-function toPlottableCsv( plain ) {
+function toFlotSeriesFormat( plain ) {
   var plot = [];
 
   plain = plain.split( '\n' );
@@ -185,25 +220,27 @@ function toPlottableCsv( plain ) {
   return plot;
 }
 
+
 /**
  * Takes an arbitrary string and adds a random 10-char string
  * to make it unique (at least by a high probability). Does *not*
  * test that the result is truly unique, just relies on the random
  * 10-char string to be unique.
  *
- * @param id any string, i.e.
- *     "my-unique-string"
+ * @param string
+ *        any string, i.e.
+ *            "my-unique-string"
  * @return pseudo-unique id generated from this string, i.e.
- *     "my-unique-string-trqulnb3xr"
+ *            "my-unique-string-trqulnb3xr"
  */
-function unique( id ) {
-  return id + '-' + Math.max( 0.0001, Math.random() ).toString( 36 ).substr( -10 );
+function unique( string ) {
+  return string + '-' + Math.max( 0.0001, Math.random() ).toString( 36 ).substr( -10 );
 }
 
 
-$(document).ready(function() {
-  $main = $('#main-container').windowed({
+$( document ).ready( function() {
+  $main = $('#main-container').windowed( {
     handlers: [ csvHandler, videoHandler, kmlHandler ],
     uploadUrl: function( filename ) { return location.pathname + '/' + filename; }
-  });
-});
+  } );
+} );

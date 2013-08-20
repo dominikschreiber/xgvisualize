@@ -161,12 +161,17 @@ html, body {
 // ===== sync =======================================================
 
 .sync {
+  display: none;
+}
+
+.container.dropzone > .sync {
+  display: block;
   position: absolute;
   top: 1em;
   right: 1em;
   opacity: .1;
+}
 
-  &.synced { 
-    opacity: 1;
-  }
+.container.dropzone.synced > .sync {
+  opacity: 1;
 }
