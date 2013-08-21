@@ -3,19 +3,22 @@ var $main
 
   , csvHandler = {
 
+
       plots: {},
 
-      selectionBaseSize: 200,
 
       iam: 'chart',
+
 
       when: function( filename ) {
         return filename.endsWith('.csv');
       },
 
+
       read: function( reader, file ) {
         reader.readAsBinaryString( file );
       },
+
 
       render: function( $content, pathname, filename ){
         var self = this;
@@ -46,7 +49,8 @@ var $main
           } ], options );
 
           $content.bind( 'plotselected', function( event, ranges ) {
-            var to = Math.max( ranges.xaxis.to, ranges.xaxis.from + 0.00001 );
+            var to = Math.max( ranges.xaxis.to, ranges.xaxis.from + 0.00001 )
+              , id = $content.attr( 'id' );
 
             self.plots[ id ].plot = $.plot( 
               $content, 
@@ -67,9 +71,11 @@ var $main
         } );
       },
 
+
       type: function( file ) {
         return 'text/csv';
       },
+
 
       /**
        * WARNING: makes heavy assumptions that the chart in $content has
@@ -90,12 +96,12 @@ var $main
           , info = self.plots[ id ]
           , plot = info.plot
           , center = Math.min( Math.max( info.start + position, 0 ), info.data.length - 1 ) - 1 // 0-indexed
-          , selectionSize = self.selectionBaseSize / Math.pow( 2, $content.parentsUntil( '#main-container' ).length )
-          , indexInSelection = Math.min( center, Math.max( selectionSize - ( info.data.length - 1 - center ), 100 ) )
+          , selectionSize = plot.width() / 8
+          , indexInSelection = Math.round( Math.min( center, Math.max( selectionSize - ( info.data.length - 1 - center ), selectionSize / 2 ) ) )
           , leftBound = center - selectionSize / 2
           , rightBound = center + selectionSize / 2
-          , fromPosition = Math.max( Math.min( leftBound, info.data.length - selectionSize - 1 ), 0 )
-          , toPosition = Math.max( Math.min( rightBound, info.data.length - 1 ), selectionSize );
+          , fromPosition = Math.floor( Math.max( Math.min( leftBound, info.data.length - selectionSize - 1 ), 0 ) )
+          , toPosition = Math.ceil( Math.max( Math.min( rightBound, info.data.length - 1 ), selectionSize ) );
 
         info.currentIndexInSelection = indexInSelection;
 
@@ -105,7 +111,11 @@ var $main
             to: toPosition
           }
         } );
+
+        console.log( id + ' == ' + plot.getPlaceholder().attr( 'id' ) + ' : ' + ( id == plot.getPlaceholder().attr( 'id' ) ) );
+
       },
+
 
       toJSON: function( $content ) {
         return JSON.stringify( self.plots[ $content.attr( 'id' ) ].data );
@@ -230,11 +240,13 @@ function toFlotSeriesFormat( plain ) {
  * @param string
  *        any string, i.e.
  *            "my-unique-string"
+ *            "#foo.bar"
  * @return pseudo-unique id generated from this string, i.e.
  *            "my-unique-string-trqulnb3xr"
+ *            "-foo-bar"
  */
 function unique( string ) {
-  return string + '-' + Math.max( 0.0001, Math.random() ).toString( 36 ).substr( -10 );
+  return string.replace( /[#\.]/g, '-' ) + '-' + Math.max( 0.0001, Math.random() ).toString( 36 ).substr( -10 );
 }
 
 
