@@ -20,13 +20,36 @@ var $main
       },
 
 
-      render: function( $content, pathname, filename ){
+      /**
+       * Plots the content of the file found at `url`
+       * as a line graph into `$content` using the flotcharts
+       * library.
+       *
+       * Adds a unique id generated from `filename` to `$content`.
+       * 
+       * Binds redrawing functionality to the `plotselected`-Event
+       * fired on `$content`. This is used to zoom around the
+       * current selection when navigating content.
+       *
+       * @param $content
+       *        the jQuery DOM Object that will be the placeholder
+       *        for the plot
+       * @param url
+       *        absolute url to a csv file in the form
+       *            "1;234" +
+       *            "2;345" +
+       *            "3;456" ...
+       * @param filename
+       *        name of the file to be found at `url`. used to label
+       *        the plotted graph
+       */
+      render: function( $content, url, filename ){
         var self = this;
 
         id = unique( filename );
         self.plots[ id ] = {};
 
-        $.get( pathname ).done( function( body ) {
+        $.get( url ).done( function( body ) {
           var csv = toFlotSeriesFormat( body )
             , options = {
                 crosshair: {
@@ -44,7 +67,7 @@ var $main
           self.plots[ id ].start = csv[ 0 ][ 0 ];
           self.plots[ id ].data = csv;
           self.plots[ id ].plot = $.plot( $content.attr( 'id', id ).resizable(), [ {
-            data: csv,
+            data: csv.slice( 0, $content.width() / 8 ),
             label: filename
           } ], options );
 
@@ -111,9 +134,6 @@ var $main
             to: toPosition
           }
         } );
-
-        console.log( id + ' == ' + plot.getPlaceholder().attr( 'id' ) + ' : ' + ( id == plot.getPlaceholder().attr( 'id' ) ) );
-
       },
 
 
