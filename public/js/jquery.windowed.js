@@ -840,8 +840,10 @@
                 .appendTo( $container.disableSelection() )
                 .click( function() {
                     $container.toggleClass( 'synced' );
-                    if ( $( '.dropzone:not(.synced)' ).length == 0 ) {
+                    if ( $( '.dropzone:not( .synced )' ).length == 0 ) {
                         $( '#control-sync' ).removeClass( 'disabled ');
+                    } else {
+                        $( '#control-sync' ).addClass( 'disabled' );
                     }
                     self.move();
                 } );
