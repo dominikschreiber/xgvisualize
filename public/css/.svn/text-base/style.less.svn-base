@@ -74,8 +74,9 @@ html, body {
     margin-bottom: ((@header-height - 14px) / 2);
   }
 
-  label {
-    margin: 13px 0;
+  label,
+  span {
+    margin: 13px;
   }
 }
 
@@ -85,6 +86,7 @@ html, body {
   display: block;
   width: 14px;
   height: 14px;
+  opacity: 1;
   background-image: url( '/img/glyphicons-halflings.png' );
   background-repeat: no-repeat;
 
@@ -92,9 +94,14 @@ html, body {
     background-image: url( '/img/glyphicons-halflings-white.png' );
   }
 
+  &.disabled {
+    opacity: .3;
+  }
+
   &.forward { background-position: -335px -73px;}
   &.backward { background-position: -241px -73px;}
   &.sync { background-position: -336px -122px; }
+  &.crosshair { background-position: -143px -97px;}
 }
 
 // ===== main =======================================================
@@ -160,18 +167,28 @@ html, body {
 
 // ===== sync =======================================================
 
-.sync {
-  display: none;
+.container {
+  .sync, .crosshair {
+    display: none;
+  }
 }
 
-.container.dropzone > .sync {
-  display: block;
-  position: absolute;
-  top: 1em;
-  right: 1em;
-  opacity: .1;
+.container.dropzone {
+  & > .icon {
+    display: block;
+    position: absolute;
+    top: 1em;
+    opacity: .3;
+  }
+  & > .sync {
+    right: 1em;
+  }
+  & > .crosshair {
+    right: 3em;
+  }
 }
 
-.container.dropzone.synced > .sync {
+.container.dropzone.synced > .sync,
+.container.dropzone.start-set > .crosshair {
   opacity: 1;
 }

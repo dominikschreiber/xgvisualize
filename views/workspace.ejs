@@ -2,8 +2,11 @@
 <header class="app-header">
   <a href="/" class="app-brand"><%= title %></a>
   <div class="app-controls">
-	<a href="#" id="control-backward" class="icon inverse backward"></a>
+  	<a href="#" id="control-start" class="icon inverse disabled crosshair"></a>
+  	<a href="#" id="control-sync" class="icon inverse disabled sync"></a>
   	<label><input id="control-speed" type="number" size="5"/>ms</label>
+  	<span id="control-currenttime">00.000</span>
+	<a href="#" id="control-backward" class="icon inverse backward"></a>
 	<a href="#" id="control-forward" class="icon inverse forward"></a>
   </div>
 </header>

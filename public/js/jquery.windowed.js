@@ -11,10 +11,13 @@
             resizeDistance: 10,
             // this is an array of objects of the form
             // {
-            //   iam: String, -> class added to $containers for this handler
+            //   iam: String, -> class added to $content for this handler
             //   when: function( filename ), -> if this condition holds
-            //   thenRead: function( reader, file ), -> the reader should read the file that way
-            //   thenDo: function( $container, file, body ), -> and it should be processed that way
+            //   read: function( reader, file ), -> the reader should read the file that way
+            //   render: function( $content, url, filename ), -> and it should be processed that way
+            //   type: function( file ), -> type of files handled by this handler
+            //   jump: function( $content, position ), -> set the currentime of the $content to position
+            //   setStartTime: function( $content, event, onSuccess, onError ), -> set 0:00 on $content
             //   toJSON: function( $container ) -> convert content in $container to JSON
             // }
             handlers: [],
@@ -36,7 +39,7 @@
         this._defaults = defaults;
         this._name = pluginName;
 
-        this.dPressed = false;
+        this.pressedKeys = [];
         this.start = false;
         this.startX = 0;
         this.startY = 0;
@@ -52,12 +55,18 @@
 
 
         init: function() {
-            var self = this;
+            var self = this
+              , $start = $( '#control-start' );
 
             $( window ).keydown( function( event ) {
                 switch ( event.which ) {
                     case 68: // d-key pressed
-                        self.dPressed = true; 
+                        self.pressedKeys.push( 'd' ); 
+                        break;
+                    case 48: // 0-key pressed
+                        self.pressedKeys.push( '0' );
+                        $start.removeClass( 'disabled' );
+                        $( 'body' ).css( 'cursor', 'crosshair !important' );
                         break;
                     case 37: // arrow left pressed
                         self.moveBackward();
@@ -69,7 +78,12 @@
             }).keyup( function( event ) {
                 switch ( event.which) {
                     case 68: // d-key released
-                        self.dPressed = false; 
+                        delete self.pressedKeys[ 'd' ]; 
+                        break;
+                    case 48: // 0-key released
+                        delete self.pressedKeys[ '0' ];
+                        $start.addClass( 'disabled' );
+                        $( 'body' ).css( 'cursor', 'auto' );
                         break;
                 }
             }).mousedown( function( event ) {
@@ -81,6 +95,7 @@
             }).mouseup( function( event ) {
                 if ( event.which == 1 ) { // left button released
                     self.start = false;
+                    self.move();
                 }
             }).mousemove( function( event ) {
                 var border = self.nearBorder( event.pageX, event.pageY )
@@ -106,7 +121,7 @@
                       , height = ( self.start.isOuterBorder ) ? self.$element.width() : self.start.element.width()
                       , percentY = 100 * y / height;
 
-                    self.resize(self.start.element, x, y, self.start);
+                    self.resize( self.start.element, x, y, self.start );
 
                     self.start = self.nearBorder(event.pageX, event.pageY);
                     self.startX = event.pageX;
@@ -115,8 +130,16 @@
             });
 
             self.$element.click( function( event ) {
-                if ( self.dPressed ) {
-                    self.removeElement( self.isOver( [ event.pageY, event.pageX ] ) );
+                if ( 'd' in self.pressedKeys ) {
+                    self.removeElement( self.isOver( { 
+                        x: event.pageX, 
+                        y: event.pageY 
+                    } ) );
+                } else if ( '0' in self.pressedKeys ) {
+                    self.setStartTime( self.isOver( { 
+                        x: event.pageX, 
+                        y: event.pageY 
+                    } ), event );
                 }
             });
 
@@ -157,6 +180,48 @@
             $( '#control-forward' ).click( function() {
                 self.moveForward(); 
             } );
+            $( '#control-start' ).click( function() {
+                if ( '0' in self.pressedKeys ) {
+                    self.pressedKeys.splice( self.pressedKeys.indexOf( '0' ), 1 )
+                    $start.addClass( 'disabled' );
+                    $( 'body' ).css( 'cursor', 'auto' );
+                } else {
+                    self.pressedKeys.push( '0' );
+                    $start.removeClass( 'disabled' );
+                    $( 'body' ).css( 'cursor', 'crosshair !important' );
+                }
+            } );
+            $( '#control-sync' ).click( function() {
+                var $this = $( this );
+
+                if ( $this.is( '.disabled' ) ) {
+                    $( '.container.dropzone' ).addClass( 'synced' );
+                } else {
+                    $( '.container' ).removeClass( 'synced' );
+                }
+                $this.toggleClass( 'disabled' );
+            } );
+        },
+
+
+        setStartTime: function( $container, event ) {
+            var self = this
+              , $content = $container.children( '.content' );
+
+            console.log( 'setStartTime( ' + event.pageX + ' )' );
+
+            self.getHandler( $content ).setStartTime( $content, event, function onSuccess() {
+                self.pressedKeys.splice( self.pressedKeys.indexOf( '0' ), 1 )
+                $( '#control-start' ).addClass( 'disabled' );
+                $container.addClass( 'start-set' );
+                $( 'body' ).css( 'cursor', 'auto' );
+                self.move();
+            }, function onError() {
+                if ( '0' in self.pressedKeys ) {
+                    self.pressedKeys.splice( self.pressedKeys.indexOf( '0' ), 1 );
+                }
+                self.move();
+            } );
         },
 
 
@@ -185,11 +250,51 @@
         move: function() {
             var self = this;
 
+            $( '#control-currenttime' ).text( self.toMillisecondsTimeString( self.position ) );
+
             $( '.container.synced' ).each( function() {
                 var $content = $( this ).children( '.content' );
 
                 self.getHandler( $content ).jump( $content, self.position );
             } );
+        },
+
+
+        /**
+         * formats a time in milliseconds to a timestring of
+         * the format [hh:][mm:]ss.sss
+         *
+         *     toMillisecondsTimeString( 1 )
+         *     // => "00.001"
+         *     toMillisecondsTimeString( 1000 )
+         *     // => "01.000"
+         *     toMillisecondsTimeString( 60 * 1000 )
+         *     // => "01:00.000"
+         *     toMillisecondsTimeString( 2.34 * 60 * 60 * 1000 )
+         *     // => "02:20:23:374"
+         *
+         *
+         * @return the formatted timestring
+         */
+        toMillisecondsTimeString: function( timeInMilliseconds ) {
+            var ms = timeInMilliseconds % 1000
+              , t1 = ( timeInMilliseconds - ms ) / 1000
+              , sec = t1 % 60
+              , t2 = ( t1 - sec ) / 60
+              , min = t2 % 60
+              , hr = ( t2 - min ) / 60
+              , result = '';
+
+            if ( hr > 0 ) {
+                result += ( hr < 10 ? '0' : '' ) + hr + ':';
+            }
+            if ( hr <= 0 && min > 0 || hr > 0 ) {
+                result += ( min < 10 ? '0' : '' ) + min + ':';
+            }
+            result += ( sec < 10 ? '0' : '' ) + sec;
+            result += '.' + ( Array(4).join('0') + ms ).substr( -3 );
+
+            return result;
         },
 
 
@@ -666,11 +771,6 @@
         },
 
 
-        containsMediaElement: function( $element ) {
-            return $element.children( '.content' ).length > 0;
-        },
-
-
         splitContainer: function($container, edge, oldClasses, newClasses) {
             var self = this
               , top1 = ( edge == 'bottom' ) ? '50%' : 0
@@ -686,7 +786,7 @@
               , $newContent = $( '<div class="content"/>' )
               , $containerContent = $container.children( '.content' );
 
-            if ( self.containsMediaElement( $container ) ) {
+            if ( $container.children( '.content' ).length > 0 ) {
                 if ( self.isHorizontalBorder( edge ) && $container.width() / 2 < self.options.minWidth ) {
                     console.warn( 'minimum window width reached' );
                     return false;
@@ -732,53 +832,67 @@
 
 
         setupContainer: function( $container ) {
-            var self = this;
+            var self = this
+              , zIndex = parseInt( $container.css( 'z-index' ) ) + 1;
 
             $( '<div class="icon sync"/>')
-                .css( 'z-index', parseInt( $container.css( 'z-index' ) + 1 ) )
+                .css( 'z-index', zIndex )
                 .appendTo( $container.disableSelection() )
                 .click( function() {
                     $container.toggleClass( 'synced' );
+                    if ( $( '.dropzone:not(.synced)' ).length == 0 ) {
+                        $( '#control-sync' ).removeClass( 'disabled ');
+                    }
                     self.move();
+                } );
+
+            $( '<div class="icon crosshair"/>')
+                .css( 'z-index', zIndex )
+                .appendTo( $container )
+                .click( function() {
+                    if ( $container.is( '.start-set' ) ) {
+                        $container.removeClass( 'start-set' );
+                        self.setStartTime( $container, false );
+                    }
                 } );
         },
 
 
-        toJSON: function( $element ) {
-            if ( !$element ) $element = this.$element;
+        // toJSON: function( $element ) {
+        //     if ( !$element ) $element = this.$element;
 
-            var self = this
-              , $children = $element.children( '.content' )
-              , cls = self.getClass( $children )
-              , children = []
-              , contentHandler = self.getHandlerForClass( cls );
+        //     var self = this
+        //       , $children = $element.children( '.content' )
+        //       , cls = self.getClass( $children )
+        //       , children = []
+        //       , contentHandler = self.getHandler( $children );
 
-            $element.children( '.content' ).each(function() {
-                children.push( self.toJSON( $(this) ) );
-            });
+        //     $element.children( '.content' ).each(function() {
+        //         children.push( self.toJSON( $(this) ) );
+        //     });
             
-            return {
-                classes: $element.attr( 'class' ),
-                css: $element.attr( 'style' ),
-                children: children,
-                content: (( contentHandler ) ? contentHandler.toJSON( $element.children( '.content' ) ) : false )
-            };
-        },
+        //     return {
+        //         classes: $element.attr( 'class' ),
+        //         css: $element.attr( 'style' ),
+        //         children: children,
+        //         content: (( contentHandler ) ? contentHandler.toJSON( $element.children( '.content' ) ) : false )
+        //     };
+        // },
 
 
-        getHandlerForClass: function( classname ) {
-            var self = this;
+        // getHandlerForClass: function( classname ) {
+        //     var self = this;
 
-            for ( var i = 0; i < self.options.handlers.length; i++ ) {
-                var handler = self.options.handlers[ i ];
+        //     for ( var i = 0; i < self.options.handlers.length; i++ ) {
+        //         var handler = self.options.handlers[ i ];
 
-                if ( handler.iam == classname ) {
-                    return handler;
-                }
-            }
+        //         if ( handler.iam == classname ) {
+        //             return handler;
+        //         }
+        //     }
 
-            return false;
-        }
+        //     return false;
+        // }
     };
 
 

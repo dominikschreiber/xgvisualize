@@ -59,8 +59,12 @@ var $main
                   mode: 'x'
                 },
                 grid: {
+                  clickable: true,
                   hoverable: false,
                   autoHighlight: false
+                },
+                legend: {
+                  position: 'nw'
                 }
               };
 
@@ -68,7 +72,7 @@ var $main
           self.plots[ id ].data = csv;
           self.plots[ id ].plot = $.plot( $content.attr( 'id', id ).resizable(), [ {
             data: csv.slice( 0, $content.width() / 8 ),
-            label: filename
+            label: filename + ' (start = ' + self.plots[ id ].start + ')'
           } ], options );
 
           $content.bind( 'plotselected', function( event, ranges ) {
@@ -79,7 +83,7 @@ var $main
               $content, 
               [ { 
                 data: self.plots[ id ].data.slice( ranges.xaxis.from, to ),
-                label: filename + '\n[ ' + ranges.xaxis.from.toFixed() + ' : ' + to.toFixed() + ' ]'
+                label: filename + ' (start = ' + self.plots[ id ].start + ')'
               } ], 
               $.extend( true, options, {
                 xaxis: {
@@ -137,6 +141,30 @@ var $main
       },
 
 
+      setStartTime: function( $content, event, onSuccess, onError ) {
+        var self = this
+          , id = $content.attr( 'id' )
+          , plot, plotOffset, canvasX, canvasY, pos;
+
+        if ( !event ) {
+          self.plots[ id ].start = self.plots[ id ].data[ 0 ][ 0 ];
+          self.jump( $content, 0 );
+          onError();
+        } else {
+          plot = self.plots[ id ].plot;
+          offset = $content.offset();
+          plotOffset = plot.getPlotOffset();
+          canvasX = event.pageX - offset.left - plotOffset.left;
+          canvasY = event.pageY - offset.top - plotOffset.top;
+          pos = plot.c2p( { left: canvasX, top: canvasY } );
+
+          self.plots[ id ].start = Math.round( pos.x );
+          self.jump( $content, 0 );
+          onSuccess();
+        }
+      },
+
+
       toJSON: function( $content ) {
         return JSON.stringify( self.plots[ $content.attr( 'id' ) ].data );
       }
@@ -145,27 +173,75 @@ var $main
 
   , videoHandler = {
 
+
       iam: 'video',
+
+      /**
+       * maps $content.attr( 'id' ) to information
+       * about videos
+       *
+       * attributes:
+       *     - start = the start time, measured in *seconds*
+       */
+      videos: {},
+
 
       when: function( filename ) {
         return filename.endsWith( '.webm' ) || filename.endsWith( '.mp4' );
       },
 
+
       read: function( reader, file ) {
         reader.readAsDataURL( file );
       },
 
-      render: function( $content, pathname, id ) {
-        $( '<video src="' + pathname + '" controls/>' ).appendTo( $content );
+
+      render: function( $content, pathname, filename ) {
+        var self = this
+          , id = unique( filename );
+
+        self.videos[ id ] = {
+          start: 0
+        };
+
+        $( '<video src="' + pathname + '" controls/>' ).appendTo( $content.attr( 'id', id ) );
       },
+
 
       type: function( file ) {
         return 'video/' + file.name.substring( file.name.lastIndexOf( '.' ) + 1 );
       },
 
+
       jump: function( $content, position ) {
-        $content.find( 'video' ).get( 0 ).currentTime = position / 1000;
+        var self = this
+          , id = $content.attr( 'id' )
+          , video = $content.find( 'video' ).get( 0 );
+
+        // start is measured in seconds
+        // position is measured in milliseconds
+        video.currentTime = self.videos[ id ].start + ( position / 1000 );
       },
+
+
+      setStartTime: function( $content, event, onSuccess, onError ) {
+        var self = this
+          , id = $content.attr( 'id' )
+          , video;
+
+        if ( !event ) {
+          self.videos[ id ].start = 0;
+          self.jump( $content, 0 );
+          onError();
+        } else {
+          video = $content.find( 'video' ).get( 0 );
+          // start is measured in seconds
+          self.videos[ id ].start = video.currentTime;
+          self.jump( $content, 0 );
+          onSuccess();
+        }
+      },
+
 
       toJSON: function( $content ) {}
     }
@@ -215,22 +291,46 @@ var $main
     toJSON: function( $content ) {}
   };
 
+/**
+ * finds the data item that's x value is next to
+ * `position` in the flot data series `series`.
+ *
+ *     dataItemNextToPosition( [ [ 0, 4 ], [ 2, 6 ], [ 8, 3 ] ], 5 )
+ *     // => [ 2, 6 ]
+ *
+ * @param series
+ *        the data series the data item should be found in
+ * @param position
+ *        the position in milliseconds that should be found
+ * @return the data item of `series` that is next to `position`
+ */
+function dataItemNextToPosition( series, position ) {
+  var distance = Number.MAX_VALUE
+    , dataitem = false
+    , currentDistance;
+
+  for ( var i = 0; i < series.length; i++ ) {
+    currentDistance = Math.abs( position - series[ i ][ 0 ] );
+    if ( currentDistance < distance ) {
+      distance = currentDistance;
+      dataitem = series[ i ];
+    }
+  }
+
+  return dataitem;
+}
+
 
 /**
  * converts a csv file to a json array that can
  * be plotted by flotcharts
  *
+ *     toFlotSeriesFormat( "1;123\n2;456\n3;789" )
+ *     // => [ [ 1, 123 ], [ 2, 456 ], [ 3, 789 ] ]
+ *
  * @param plain 
- *        the plain csv file content, i.e.
- *            "1;123\n" +
- *            "2;456\n" +
- *            "3;789"
- * @return the converted array, i.e.
- *            [
- *              [ 1, 123 ],
- *              [ 2, 456 ],
- *              [ 3, 789 ]
- *            ]
+ *        the plain csv file content
+ * @return the converted array
  */
 function toFlotSeriesFormat( plain ) {
   var plot = [];
@@ -257,16 +357,17 @@ function toFlotSeriesFormat( plain ) {
  * test that the result is truly unique, just relies on the random
  * 10-char string to be unique.
  *
+ *     unique( '#foo.bar' )
+ *     // => '-foo-bar-trquln3xr'
+ *
  * @param string
- *        any string, i.e.
- *            "my-unique-string"
- *            "#foo.bar"
- * @return pseudo-unique id generated from this string, i.e.
- *            "my-unique-string-trqulnb3xr"
- *            "-foo-bar"
+ *        any string
+ * @return pseudo-unique id generated from `string`
  */
 function unique( string ) {
-  return string.replace( /[#\.]/g, '-' ) + '-' + Math.max( 0.0001, Math.random() ).toString( 36 ).substr( -10 );
+  return string.replace( /[#\.]/g, '-' ) 
+    + '-' 
+    + Math.max( 0.0001, Math.random() ).toString( 36 ).substr( -10 );
 }
 
 
