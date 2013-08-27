@@ -74,10 +74,14 @@ var $main
           self.plots[ id ].name = filename;
           self.plots[ id ].start = csv[ 0 ][ 0 ];
           self.plots[ id ].data = csv;
-          self.plots[ id ].plot = $.plot( $content.attr( 'id', id ).resizable(), [ {
-            data: csv.slice( 0, $content.width() / 8 ),
-            label: filename + ' (start = ' + self.plots[ id ].start + ')'
-          } ], options );
+          self.plots[ id ].markers = {};
+          self.plots[ id ].plot = $.plot( 
+            $content.attr( 'id', id ).resizable(), 
+            [ {
+              data: csv.slice( 0, $content.width() / 8 ),
+              label: filename + ' (start = ' + self.plots[ id ].start + ')'
+            } ].concat( self.toDataSeries( id, self.plots[ id ].markers ) ), 
+            options );
 
           $content.bind( 'plotselected', function( event, ranges ) {
             self.select( $content, options, ranges.xaxis.from, ranges.xaxis.to, self );
@@ -89,16 +93,44 @@ var $main
       },
 
 
+      toDataSeries: function( id, markerObject ) {
+        var self = this
+          , series = []
+          , data = self.plots[ id ].data
+          , currentTime;
+
+        for ( var key in markerObject ) {
+          currentTime = parseInt( key );
+          series.push( { 
+            data: [ data[ currentTime ] ], 
+            lines: { 
+              show: false
+            }, 
+            points: {
+              show: true,
+              radius: 4,
+              symbol: 'circle'
+            },
+            color: markerObject[ key ].color
+          } );
+        }
+
+        return series;
+      },
+
+
       select: function( $content, options, from, to, self, next ) {
-        var id = $content.attr( 'id' );
+        var id = $content.attr( 'id' )
+          , data = [ {
+              data: self.plots[ id ].data.slice( from, to ),
+              label: self.plots[ id ].name + ' (start = ' + self.plots[ id ].start + ')'
+            } ].concat( self.toDataSeries( id, self.plots[ id ].markers ) );
 
         to = Math.max( from + 0.00001, to );
+        
         self.plots[ id ].plot = $.plot(
           $content,
-          [ {
-            data: self.plots[ id ].data.slice( from, to ),
-            label: self.plots[ id ].name + ' (start = ' + self.plots[ id ].start + ')'
-          } ],
+          data,
           $.extend( true, options, {
             xaxis: {
               min: from + 1,
@@ -155,25 +187,48 @@ var $main
 
       setStartTime: function( $content, event, onSuccess, onError ) {
         var self = this
-          , id = $content.attr( 'id' )
-          , plot, plotOffset, canvasX, canvasY, pos;
+          , id = $content.attr( 'id' );
 
         if ( !event ) {
           self.plots[ id ].start = self.plots[ id ].data[ 0 ][ 0 ];
           self.jump( $content, 0 );
           onError();
         } else {
-          plot = self.plots[ id ].plot;
-          offset = $content.offset();
-          plotOffset = plot.getPlotOffset();
-          canvasX = event.pageX - offset.left - plotOffset.left;
-          canvasY = event.pageY - offset.top - plotOffset.top;
-          pos = plot.c2p( { left: canvasX, top: canvasY } );
-
-          self.plots[ id ].start = Math.round( pos.x );
+          self.plots[ id ].start = Math.round( 
+            self.getClickedDataItem( 
+              id, 
+              $content.offset(), 
+              event.pageX, 
+              event.pageY ).x 
+            );
           self.jump( $content, 0 );
           onSuccess();
         }
+      },
+
+
+      getClickedDataItem: function( id, offset, x, y ) {
+        var self = this
+          , plot = self.plots[ id ].plot
+          , plotOffset = plot.getPlotOffset()
+          , canvasX = x - offset.left - plotOffset.left
+          , canvasY = y - offset.top - plotOffset.top;
+
+        return plot.c2p( { left: canvasX, top: canvasY } );
+      },
+
+
+      setMarker: function( $content, marker, onSuccess ) {
+        var self = this
+          , id = $content.attr( 'id' )
+          , info = self.plots[ id ]
+          , item = self.getClickedDataItem( id, $content.offset(), marker.x, marker.y )
+          , time = Math.round( item.x );
+
+        self.plots[ id ].markers[ time ] = marker;
+        self.jump( $content, 0 );
+
+        onSuccess( time );
       },
 
 
@@ -257,11 +312,6 @@ var $main
           .get( 0 );
         ctx = canvas.getContext( '2d' );
 
-        ctx.strokeStyle = 'rgb(50,150,190)';
-        ctx.lineWidth = 6;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-
         // canvas is quite pixelated on retina displays
         // so it is scaled if the display is hidpi
         backingStoreRatio = ctx.webkitBackingStorePixelRatio ||
@@ -292,6 +342,7 @@ var $main
         video.addEventListener( 'timeupdate', function() {
           self.clearCanvas( canvas );
 
+          // video.currentTime is in seconds, markers maps to milliseconds
           if ( video.currentTime * 1000 in self.videos[ id ].markers ) {
             self.drawMarker( canvas, self.videos[ id ].markers[ video.currentTime * 1000 ] );
           }
@@ -334,12 +385,24 @@ var $main
           , topY = Math.min( Math.max( marker.y - size / 2, 0 ), canvas.height )
           , leftX = Math.min( Math.max( marker.x - size / 2, 0 ), canvas.width );
 
+        ctx.save();
+
+        ctx.strokeStyle = marker.color;
+        ctx.fillStyle = 'rgba(255, 255, 255, .6)';
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        ctx.arc( marker.x, marker.y, size / 2, 0, Math.PI * 2 );
+        ctx.fill();
+
         ctx.beginPath();
         ctx.moveTo( leftX, marker.y );
         ctx.lineTo( rightX, marker.y );
         ctx.moveTo( marker.x, bottomY );
         ctx.lineTo( marker.x, topY );
         ctx.stroke();
+
+        ctx.restore();
       },
 
 
@@ -380,17 +443,19 @@ var $main
 
       setMarker: function( $content, marker, onSuccess ) {
         var self = this
+          , video = $content.find( 'video' ).get( 0 )
           , canvas = $content.find( 'canvas' ).get( 0 );
 
-        self.videos[ $content.attr( 'id' ) ].markers[ marker.time ] = { 
+        self.videos[ $content.attr( 'id' ) ].markers[ video.currentTime * 1000 ] = { 
           x: marker.x, 
-          y: marker.y 
+          y: marker.y,
+          color: marker.color
         };
 
         self.clearCanvas( canvas );
-        self.drawMarker( canvas, { x: marker.x, y: marker.y } );       
+        self.drawMarker( canvas, { x: marker.x, y: marker.y, color: marker.color } );       
 
-        onSuccess();
+        onSuccess( video.currentTime * 1000 ); // video.currentTime is in seconds
       },
 
 

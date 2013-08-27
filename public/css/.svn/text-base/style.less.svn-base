@@ -28,17 +28,19 @@ img {
 // ===== header bar =================================================
 
 .app-header {
+  position: relative;
   height: @header-height;
   margin-top: -@header-height;
+  z-index: 999999;
 
   .simple-linear-gradient(@dark);
 }
 
 .app-brand {
-  display: inline-block;
+  display: block;
+  float: left;
   padding: 14px;
   height: @header-height;
-  width: 200px;
 
   color: white;
   font-weight: bold;
@@ -81,6 +83,58 @@ img {
   label,
   span {
     margin: 13px;
+  }
+}
+
+.app-markers {
+  position: relative;
+  display: block;
+  margin: 13px;
+  float: left;
+  width: 200px;
+  color: white;
+  z-index: initial;
+
+  a, a:link, a:visited, a:active, a:focus, a:hover {
+    color: white;
+    text-decoration: none;
+  }
+
+  .icon {
+    display: inline-block;
+    float: left;
+    margin: ( ( ( @header-height - 14px ) / 2 ) - 13px ) 1em 0;
+  }
+}
+
+.dropdown {
+  position: absolute;
+  top: -210px;
+  left: 0;
+  width: 200px;
+  overflow-y: auto;
+  max-height: 200px;
+
+  color: white;
+  background-color: transparent;
+  box-shadow: 2px 2px 6px fade( @dark, 20% );
+
+  z-index: -1;
+  transition: top .5s;
+
+  &.visible {
+    top: @header-height - 13px;
+  }
+
+  li {
+    padding: .5ex 1em;
+    list-style-type: none;
+    opacity: .7;
+    cursor: pointer;
+
+    &.active {
+      opacity: 1;
+    }
   }
 }
 

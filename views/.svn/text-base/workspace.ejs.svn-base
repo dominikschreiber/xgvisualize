@@ -1,6 +1,10 @@
 <% include header.ejs %>
 <header class="app-header">
   <a href="/" class="app-brand"><%= title %></a>
+  <div class="app-markers">
+    <a href="#" id="control-toggle-marker-dropdown"><span class="icon inverse marker"></span> Marker</a>
+    <ul id="control-marker-dropdown" class="dropdown"></ul>
+  </div>
   <div class="app-controls">
   	<a href="#" id="control-marker" class="icon inverse disabled marker"/></a>
   	<a href="#" id="control-start" class="icon inverse disabled crosshair"></a>

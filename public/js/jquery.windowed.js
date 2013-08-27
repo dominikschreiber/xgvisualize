@@ -60,21 +60,29 @@
         init: function() {
             var self = this
               , $start = $( '#control-start' )
-              , $marker = $( '#control-marker' );
+              , $marker = $( '#control-marker' )
+              , $toggleMarker = $( '#control-toggle-marker-dropdown' )
+              , $dropdown = $( '#control-marker-dropdown' );
 
             $( window ).keydown( function( event ) {
                 switch ( event.which ) {
                     case 68: // d-key pressed
-                        self.addToSet( self.pressedKeys, 'd' ); 
+                        if ( !self.isInSet( self.pressedKeys, 'd' ) ) {
+                            self.addToSet( self.pressedKeys, 'd' );
+                        }
                         break;
                     case 48: // 0-key pressed
-                        self.addToSet( self.pressedKeys, '0' );
-                        $start.removeClass( 'disabled' );
-                        $( 'body' ).css( 'cursor', 'crosshair !important' );
+                        if ( !self.isInSet( self.pressedKeys, '0' ) ) {
+                            self.addToSet( self.pressedKeys, '0' );
+                            $start.removeClass( 'disabled' );
+                            $( 'body' ).css( 'cursor', 'crosshair !important' );
+                        }
                         break;
                     case 77: // m-key pressed
-                        self.addToSet( self.pressedKeys, 'm' );
-                        $marker.removeClass( 'disabled' );
+                        if ( !self.isInSet( self.pressedKeys, 'm' ) ) {
+                            self.addToSet( self.pressedKeys, 'm' );
+                            $marker.removeClass( 'disabled' );
+                        }
                         break;
                     case 37: // arrow left pressed
                         self.moveBackward();
@@ -215,6 +223,9 @@
             $( '#control-forward' ).click( function() {
                 self.moveForward(); 
             } );
+            $toggleMarker.click( function() {
+                $dropdown.toggleClass( 'visible' );
+            } );
             $marker.click( function() {
                 if ( self.isInSet( self.pressedKeys, 'm' ) ) {
                     self.removeFromSet( self.pressedKeys, 'm' );
@@ -271,25 +282,56 @@
             var self = this
               , $content = $container.children( '.content' )
               , marker = {
-                    // TODO i'm unsure if the marker should
-                    // be set to the global time position
-                    // or if it is better to let every handler
-                    // select the time itself.
-                    time: self.position,
                     x: event.offsetX,
-                    y: event.offsetY
-                };
+                    y: event.offsetY,
+                    color: self.nextMarkerColor()
+                }
+              , $marker;
 
-            console.log( event );
+            self.getHandler( $content ).setMarker( $content, marker, function onSuccess( time ) {
+                var $dropdown = $( '#control-marker-dropdown' ) 
+                  , $markers = $dropdown.children( 'li' )
+                  , $currentMarker;
 
-            self.addToSet( self.markers, marker );
+                $.extend( marker, { time: time } );
 
-            $.post( self.options.markerUrl, marker ).done( function( result ) {
-                self.getHandler( $content ).setMarker( $content, marker, function onSuccess() {
+                if ( marker.time in self.markers ) {
+                    $( '#marker_' + marker.time ).css( 'background-color', marker.color );
+                } else {
+                    $marker = $( '<li id="marker_' + marker.time + '" style="background-color: ' + marker.color + ';">' + self.toMillisecondsTimeString( marker.time ) + '</li>' )
+                        .click( function() {
+                            self.position = marker.time;
+                            self.move();
+                        } );
+                    for ( var i = 0; i < $markers.length; i++ ) {
+                        $currentMarker = $( $markers[ i ] );
+
+                        if ( marker.time < parseInt( $currentMarker.attr( 'id' ).substr( 7 ) ) ) {
+                            $currentMarker.before( $marker );
+                            break;
+                        }
+                    }
+                    if ( $dropdown.has( $marker ).length == 0 ) {
+                        $marker.appendTo( $dropdown );
+                    }
+                }
+                self.markers[ marker.time ] = marker;
+
+                $.post( self.options.markerUrl, marker ).done( function( result ) {
                     self.removeFromSet( self.pressedKeys, 'm' );
                     $( '#control-marker' ).addClass( 'disabled' );
                 } );
             } );
+
+        },
+
+
+        nextMarkerColor: function() {
+            return 'rgb(16, 16, 19)';
+            // return 'rgb(' 
+            //     + Math.round( Math.random() * 150 ) + ',' 
+            //     + Math.round( Math.random() * 150 ) + ',' 
+            //     + Math.round( Math.random() * 150 ) + ')';
         },
 
 

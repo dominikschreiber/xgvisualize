@@ -20,8 +20,10 @@ img {
   padding-top: 50px;
 }
 .app-header {
+  position: relative;
   height: 50px;
   margin-top: -50px;
+  z-index: 999999;
   background-image: -webkit-linear-gradient(top left, #2b3034, #000000);
   background-image: -moz-linear-gradient(top left, #2b3034, #000000);
   background-image: -ms-linear-gradient(top left, #2b3034, #000000);
@@ -30,10 +32,10 @@ img {
   background-color: #16181a;
 }
 .app-brand {
-  display: inline-block;
+  display: block;
+  float: left;
   padding: 14px;
   height: 50px;
-  width: 200px;
   color: white;
   font-weight: bold;
   text-decoration: none;
@@ -69,6 +71,54 @@ img {
 .app-controls label,
 .app-controls span {
   margin: 13px;
+}
+.app-markers {
+  position: relative;
+  display: block;
+  margin: 13px;
+  float: left;
+  width: 200px;
+  color: white;
+  z-index: initial;
+}
+.app-markers a,
+.app-markers a:link,
+.app-markers a:visited,
+.app-markers a:active,
+.app-markers a:focus,
+.app-markers a:hover {
+  color: white;
+  text-decoration: none;
+}
+.app-markers .icon {
+  display: inline-block;
+  float: left;
+  margin: 5px 1em 0;
+}
+.dropdown {
+  position: absolute;
+  top: -210px;
+  left: 0;
+  width: 200px;
+  overflow-y: auto;
+  max-height: 200px;
+  color: white;
+  background-color: transparent;
+  box-shadow: 2px 2px 6px rgba(20, 22, 24, 0.2);
+  z-index: -1;
+  transition: top .5s;
+}
+.dropdown.visible {
+  top: 37px;
+}
+.dropdown li {
+  padding: .5ex 1em;
+  list-style-type: none;
+  opacity: .7;
+  cursor: pointer;
+}
+.dropdown li.active {
+  opacity: 1;
 }
 .icon {
   display: block;
