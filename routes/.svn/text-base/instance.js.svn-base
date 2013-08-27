@@ -164,4 +164,12 @@ exports.file = function(req, res) {
       else res.send( attachmentGetBody );
     } );
   }
-}
+};
+
+// ===== set a new marker =====================================================
+
+
+exports.addMarker = function( req, res ) {
+  console.log( req.body );
+  res.send( 200, 'success!' );
+};

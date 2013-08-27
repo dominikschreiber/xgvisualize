@@ -28,6 +28,8 @@ app.get( '/', index.home );
 
 app.get( '/new', instance.create );
 
+app.post( '/marker/:id([A-Z0-9]{6})', instance.addMarker );
+
 app.get( '/:id([A-Z0-9]{6})', instance.workspace );
 app.post( '/:id([A-Z0-9]{6})', instance.upload );
 

@@ -35,15 +35,17 @@ var $main
        *        the jQuery DOM Object that will be the placeholder
        *        for the plot
        * @param url
-       *        absolute url to a csv file in the form
+       *        absolute url to a csv file like
        *            "1;234" +
        *            "2;345" +
        *            "3;456" ...
        * @param filename
        *        name of the file to be found at `url`. used to label
        *        the plotted graph
+       * @param next
+       *        callback to be called when the rendering is done
        */
-      render: function( $content, url, filename ){
+      render: function( $content, url, filename, next ){
         var self = this;
 
         id = unique( filename );
@@ -68,6 +70,8 @@ var $main
                 }
               };
 
+          self.plots[ id ].url = url;
+          self.plots[ id ].name = filename;
           self.plots[ id ].start = csv[ 0 ][ 0 ];
           self.plots[ id ].data = csv;
           self.plots[ id ].plot = $.plot( $content.attr( 'id', id ).resizable(), [ {
@@ -76,26 +80,34 @@ var $main
           } ], options );
 
           $content.bind( 'plotselected', function( event, ranges ) {
-            var to = Math.max( ranges.xaxis.to, ranges.xaxis.from + 0.00001 )
-              , id = $content.attr( 'id' );
-
-            self.plots[ id ].plot = $.plot( 
-              $content, 
-              [ { 
-                data: self.plots[ id ].data.slice( ranges.xaxis.from, to ),
-                label: filename + ' (start = ' + self.plots[ id ].start + ')'
-              } ], 
-              $.extend( true, options, {
-                xaxis: {
-                  min: ranges.xaxis.from + 1,
-                  max: to
-                }
-              } ) );
-            self.plots[ id ].plot.highlight( 0, self.plots[ id ].currentIndexInSelection );
+            self.select( $content, options, ranges.xaxis.from, ranges.xaxis.to, self );
           } );
 
           self.jump( $content, 0 );
+          if ( next ) { next(); }
         } );
+      },
+
+
+      select: function( $content, options, from, to, self, next ) {
+        var id = $content.attr( 'id' );
+
+        to = Math.max( from + 0.00001, to );
+        self.plots[ id ].plot = $.plot(
+          $content,
+          [ {
+            data: self.plots[ id ].data.slice( from, to ),
+            label: self.plots[ id ].name + ' (start = ' + self.plots[ id ].start + ')'
+          } ],
+          $.extend( true, options, {
+            xaxis: {
+              min: from + 1,
+              max: to
+            }
+          } ) );
+        self.plots[ id ].plot.highlight( 0, self.plots[ id ].currentIndexInSelection );
+
+        if ( next ) { next(); }
       },
 
 
@@ -166,7 +178,28 @@ var $main
 
 
       toJSON: function( $content ) {
-        return JSON.stringify( self.plots[ $content.attr( 'id' ) ].data );
+        var self = this
+          , id = $content.attr( 'id' )
+          , info = self.plots[ id ]
+          , xaxes = info.plot.getXAxes()[ 0 ];
+
+        return {
+          start: info.start,
+          from: xaxes.min,
+          to: xaxes.max,
+          url: info.url,
+          name: info.name
+        }
+      },
+
+
+      fromJSON: function( $content, json ) {
+        var self = this;
+
+        self.render( $content, json.url, json.name, function next() {
+          var id = $content.attr( 'id' )
+            , info = self.plots[ id ];
+        } );
       }
     }
 
@@ -196,15 +229,117 @@ var $main
       },
 
 
-      render: function( $content, pathname, filename ) {
+      render: function( $content, url, filename, next ) {
         var self = this
-          , id = unique( filename );
+          , id = unique( filename )
+          , $video
+          , video
+          , canvas
+          , ctx
+          , devicePixelRatio = window.devicePixelRatio || 1
+          , backingStoreRatio
+          , ratio
+          , oldWidth
+          , oldHeight;
 
         self.videos[ id ] = {
-          start: 0
+          start: 0,
+          markers: {},
+          url: url,
+          name: filename
         };
 
-        $( '<video src="' + pathname + '" controls/>' ).appendTo( $content.attr( 'id', id ) );
+        $video = $( '<video src="' + url + '" controls preload="auto"/>' )
+          .appendTo( $content.attr( 'id', id ) );
+        video = $video.get( 0 );
+        canvas = $( '<canvas class="marker-canvas">please use a browser that supports <code>canvas</code>.</canvas>' )
+          .appendTo( $content )
+          .get( 0 );
+        ctx = canvas.getContext( '2d' );
+
+        ctx.strokeStyle = 'rgb(50,150,190)';
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // canvas is quite pixelated on retina displays
+        // so it is scaled if the display is hidpi
+        backingStoreRatio = ctx.webkitBackingStorePixelRatio ||
+          ctx.mozBackingStorePixelRatio ||
+          ctx.msBackingStorePixelRatio ||
+          ctx.oBackingStorePixelRatio ||
+          ctx.backingStorePixelRatio || 1;
+        ratio = devicePixelRatio / backingStoreRatio;
+
+        // when the width+height of the video are known
+        // the canvas is set to the exactly same dimensions
+        video.addEventListener( 'loadedmetadata', function() { 
+          oldWidth = canvas.width = $video.width();
+          oldHeight = canvas.height = $video.height();
+
+          if ( ratio !== 1 ) {
+            canvas.width = oldWidth * ratio;
+            canvas.height = oldHeight * ratio;
+            canvas.style.width = oldWidth + 'px';
+            canvas.style.height = oldHeight + 'px';
+            ctx.scale( ratio, ratio );
+          }
+          canvas.style.marginLeft = '-' + ( oldWidth / 2 ) + 'px';
+        } );
+
+        // there is only one marker allowed for a certain time
+        // and the marker is only visible at this very time
+        video.addEventListener( 'timeupdate', function() {
+          self.clearCanvas( canvas );
+
+          if ( video.currentTime * 1000 in self.videos[ id ].markers ) {
+            self.drawMarker( canvas, self.videos[ id ].markers[ video.currentTime * 1000 ] );
+          }
+        } );
+
+        if ( next ) { next(); }
+      },
+
+
+      clearCanvas: function( canvas ) {
+        var ctx = canvas.getContext( '2d' );
+
+        ctx.save();
+        ctx.setTransform( 1, 0, 0, 1, 0, 0 );
+        ctx.clearRect( 0, 0, canvas.width, canvas.height );
+        ctx.restore();
+      },
+
+
+      /**
+       * draws a marker, formed like a '+' with minimal
+       * dimensions of 16px to the 2d-context of `canvas`
+       *
+       * WARNING: does not check for the existance of 
+       * any 2d-context, you have to make sure that
+       * `canvas.getContext( '2d' )` does not fail.
+       *
+       *     drawMarker( <80x30 canvas>, { x: 50, y: 10 } )
+       *     // => ____+__
+       *
+       * @param canvas
+       *        the html5 canvas the marker should be drawn
+       *        to.
+       */
+      drawMarker: function( canvas, marker ) {
+        var ctx = canvas.getContext( '2d' )
+          , size = Math.max( canvas.width / 64, 16 )
+          , bottomY = Math.min( Math.max( marker.y + size / 2, 0 ), canvas.height )
+          , rightX = Math.min( Math.max( marker.x + size / 2, 0 ), canvas.width )
+          , topY = Math.min( Math.max( marker.y - size / 2, 0 ), canvas.height )
+          , leftX = Math.min( Math.max( marker.x - size / 2, 0 ), canvas.width );
+
+        ctx.beginPath();
+        ctx.moveTo( leftX, marker.y );
+        ctx.lineTo( rightX, marker.y );
+        ctx.moveTo( marker.x, bottomY );
+        ctx.lineTo( marker.x, topY );
+        ctx.stroke();
       },
 
 
@@ -243,7 +378,45 @@ var $main
       },
 
 
-      toJSON: function( $content ) {}
+      setMarker: function( $content, marker, onSuccess ) {
+        var self = this
+          , canvas = $content.find( 'canvas' ).get( 0 );
+
+        self.videos[ $content.attr( 'id' ) ].markers[ marker.time ] = { 
+          x: marker.x, 
+          y: marker.y 
+        };
+
+        self.clearCanvas( canvas );
+        self.drawMarker( canvas, { x: marker.x, y: marker.y } );       
+
+        onSuccess();
+      },
+
+
+      toJSON: function( $content ) {
+        var self = this
+          , info = self.videos[ $content.attr( 'id' ) ];
+
+        return {
+          start: info.start,
+          currentTime: $content.find( 'video' ).get( 0 ).currentTime,
+          url: info.url,
+          name: info.name
+        }
+      },
+
+
+      fromJSON: function( $content, json ) {
+        var self = this;
+
+        self.render( $content, json.url, json.name, function next() {
+          var id = $content.attr( 'id' );
+
+          self.videos[ id ].start = json.start;
+          $content.find( 'video' ).get( 0 ).currentTime = json.currentTime;
+        } );
+      }
     }
 
 
@@ -374,6 +547,7 @@ function unique( string ) {
 $( document ).ready( function() {
   $main = $('#main-container').windowed( {
     handlers: [ csvHandler, videoHandler, kmlHandler ],
-    uploadUrl: function( filename ) { return location.pathname + '/' + filename; }
+    uploadUrl: function( filename ) { return location.pathname + '/' + filename + '/'; },
+    markerUrl: '/marker/' + location.pathname.substr( -6 ) + '/'
   } );
 } );

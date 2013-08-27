@@ -1,6 +1,6 @@
 ;
 
-(function ($, window, document, undefined ) {
+( function ( $, window, document, undefined ) {
     var pluginName = "windowed",
         defaults = {
             // windows are only split if both new elements are higher than this value
@@ -23,8 +23,10 @@
             handlers: [],
             // selectors of elements that 
             controls: { backward: [], forward: [] },
-            // base uri to which files, expected to end with '/'
-            uploadUrl: false
+            // should return the url to upload a file named `filename` to, expected to end with '/'
+            uploadUrl: false,
+            // url string to which markers should be posted, expected to end with '/'
+            markerUrl: false
         };
 
 
@@ -46,6 +48,7 @@
         this.$helper = false;
         this.speed = 100; // in ms
         this.position = 0; // in ms
+        this.markers = [];
 
         this.init();
     }
@@ -56,17 +59,22 @@
 
         init: function() {
             var self = this
-              , $start = $( '#control-start' );
+              , $start = $( '#control-start' )
+              , $marker = $( '#control-marker' );
 
             $( window ).keydown( function( event ) {
                 switch ( event.which ) {
                     case 68: // d-key pressed
-                        self.pressedKeys.push( 'd' ); 
+                        self.addToSet( self.pressedKeys, 'd' ); 
                         break;
                     case 48: // 0-key pressed
-                        self.pressedKeys.push( '0' );
+                        self.addToSet( self.pressedKeys, '0' );
                         $start.removeClass( 'disabled' );
                         $( 'body' ).css( 'cursor', 'crosshair !important' );
+                        break;
+                    case 77: // m-key pressed
+                        self.addToSet( self.pressedKeys, 'm' );
+                        $marker.removeClass( 'disabled' );
                         break;
                     case 37: // arrow left pressed
                         self.moveBackward();
@@ -78,12 +86,16 @@
             }).keyup( function( event ) {
                 switch ( event.which) {
                     case 68: // d-key released
-                        delete self.pressedKeys[ 'd' ]; 
+                        self.removeFromSet( self.pressedKeys, 'd' );
                         break;
                     case 48: // 0-key released
-                        delete self.pressedKeys[ '0' ];
+                        self.removeFromSet( self.pressedKeys, '0' );
                         $start.addClass( 'disabled' );
                         $( 'body' ).css( 'cursor', 'auto' );
+                        break;
+                    case 77: // m-key released
+                        self.removeFromSet( self.pressedKeys, 'm' );
+                        $marker.addClass( 'disabled' );
                         break;
                 }
             }).mousedown( function( event ) {
@@ -130,12 +142,35 @@
             });
 
             self.$element.click( function( event ) {
-                if ( 'd' in self.pressedKeys ) {
+                var timestamp, markerX, markerY, $container, containerOffsetTop, containerOffsetLeft, zIndex, $markerImage;
+
+                if( self.isInSet( self.pressedKeys, 'm' ) ) {
+                    self.setMarker( self.isOver( {
+                        x: event.pageX,
+                        y: event.pageY
+                    } ), event );
+                    // add a new marker
+                    // timestamp = self.position;
+                    // markerX = event.clientX;
+                    // markerY = event.clientY;
+                    // $container = self.isOver( { 
+                    //     x: event.pageX, 
+                    //     y: event.pageY 
+                    // } ).children( '.content' );
+                    // containerOffsetTop = parseInt( $container.parent().css( 'top' ) );
+                    // containerOffsetLeft = parseInt( $container.parent().css( 'left' ) );
+                    // zIndex = $container.parent().css( 'zIndex' ) + 1;
+                    // $markerImage = $( '<img src="/img/marker.png" class="markerImage"></img>').css( {
+                    //     'top': markerY - containerOffsetTop,
+                    //     'left': markerX - containerOffsetLeft,
+                    //     'zIndex': zIndex,
+                    // } ).appendTo( $container );
+                } else if ( self.isInSet( self.pressedKeys, 'd' ) ) {
                     self.removeElement( self.isOver( { 
                         x: event.pageX, 
                         y: event.pageY 
                     } ) );
-                } else if ( '0' in self.pressedKeys ) {
+                } else if ( self.isInSet( self.pressedKeys, '0' ) ) {
                     self.setStartTime( self.isOver( { 
                         x: event.pageX, 
                         y: event.pageY 
@@ -180,13 +215,22 @@
             $( '#control-forward' ).click( function() {
                 self.moveForward(); 
             } );
-            $( '#control-start' ).click( function() {
-                if ( '0' in self.pressedKeys ) {
-                    self.pressedKeys.splice( self.pressedKeys.indexOf( '0' ), 1 )
+            $marker.click( function() {
+                if ( self.isInSet( self.pressedKeys, 'm' ) ) {
+                    self.removeFromSet( self.pressedKeys, 'm' );
+                    $marker.addClass( 'disabled' );
+                } else {
+                    self.addToSet( self.pressedKeys, 'm' );
+                    $marker.removeClass( 'disabled' );
+                }
+            } );
+            $start.click( function() {
+                if ( self.isInSet( self.pressedKeys, '0' ) ) {
+                    self.removeFromSet( self.pressedKeys, '0' );
                     $start.addClass( 'disabled' );
                     $( 'body' ).css( 'cursor', 'auto' );
                 } else {
-                    self.pressedKeys.push( '0' );
+                    self.addToSet( self.pressedKeys, '0' );
                     $start.removeClass( 'disabled' );
                     $( 'body' ).css( 'cursor', 'crosshair !important' );
                 }
@@ -204,21 +248,64 @@
         },
 
 
+        isInSet: function( set, element ) {
+            return set.indexOf( element ) > -1;
+        },
+
+
+        addToSet: function( set, element ) {
+            if ( set.indexOf( element ) === -1 ) {
+                set.push( element );
+            }
+        },
+
+
+        removeFromSet: function( set, element ) {
+            while ( set.indexOf( element ) > -1 ) {
+                set.splice( set.indexOf( element ), 1 );
+            }
+        },
+
+
+        setMarker: function( $container, event ) {
+            var self = this
+              , $content = $container.children( '.content' )
+              , marker = {
+                    // TODO i'm unsure if the marker should
+                    // be set to the global time position
+                    // or if it is better to let every handler
+                    // select the time itself.
+                    time: self.position,
+                    x: event.offsetX,
+                    y: event.offsetY
+                };
+
+            console.log( event );
+
+            self.addToSet( self.markers, marker );
+
+            $.post( self.options.markerUrl, marker ).done( function( result ) {
+                self.getHandler( $content ).setMarker( $content, marker, function onSuccess() {
+                    self.removeFromSet( self.pressedKeys, 'm' );
+                    $( '#control-marker' ).addClass( 'disabled' );
+                } );
+            } );
+        },
+
+
         setStartTime: function( $container, event ) {
             var self = this
               , $content = $container.children( '.content' );
 
-            console.log( 'setStartTime( ' + event.pageX + ' )' );
-
             self.getHandler( $content ).setStartTime( $content, event, function onSuccess() {
-                self.pressedKeys.splice( self.pressedKeys.indexOf( '0' ), 1 )
+                self.removeFromSet( self.pressedKeys, '0' )
                 $( '#control-start' ).addClass( 'disabled' );
                 $container.addClass( 'start-set' );
                 $( 'body' ).css( 'cursor', 'auto' );
                 self.move();
             }, function onError() {
-                if ( '0' in self.pressedKeys ) {
-                    self.pressedKeys.splice( self.pressedKeys.indexOf( '0' ), 1 );
+                if ( self.isInSet( self.pressedKeys, '0' ) ) {
+                    self.removeFromSet( self.pressedKeys, '0' );
                 }
                 self.move();
             } );
@@ -371,6 +458,7 @@
                                             pathname, 
                                             pathname.substring( pathname.lastIndexOf( '/' ) + 1 ) 
                                         );
+                                        $( '#control-sync' ).addClass( 'disabled' );
                                     } ); 
                             }
                         }
@@ -854,8 +942,9 @@
                 .click( function() {
                     if ( $container.is( '.start-set' ) ) {
                         $container.removeClass( 'start-set' );
+                        $( 'body' ).css( 'cursor', 'auto' );
                         self.setStartTime( $container, false );
-                    }
+                    } 
                 } );
         },
 
