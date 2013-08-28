@@ -282,7 +282,7 @@
             var self = this
               , $content = $container.children( '.content' )
               , marker = {
-                    x: event.offsetX,
+                    x: event.offsetX, // TODO fix this!
                     y: event.offsetY,
                     color: self.nextMarkerColor()
                 }

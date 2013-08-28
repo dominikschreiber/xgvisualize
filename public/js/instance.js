@@ -214,6 +214,8 @@ var $main
           , canvasX = x - offset.left - plotOffset.left
           , canvasY = y - offset.top - plotOffset.top;
 
+        console.log( plotOffset, offset, x, y , canvasX, canvasY );
+
         return plot.c2p( { left: canvasX, top: canvasY } );
       },
 
