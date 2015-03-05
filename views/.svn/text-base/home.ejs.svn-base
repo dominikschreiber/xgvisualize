@@ -1,9 +1,0 @@
-<% include header.ejs %>
-<header class="app-header">
-  <a href="/" class="app-brand"><%= title %></a>
-</header>
-<main id="main-container" class="empty container" data-text="Datei hier hinziehen, um zu beginnen">
-
-</main>
-<script src="js/home.js"></script>
-<% include footer.ejs %>

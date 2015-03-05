@@ -1,7 +1,0 @@
-@light: rgb(244, 246, 248);
-@dark: rgb(20, 22, 24);
-@accent: rgb(50, 150, 190);
-
-@header-height: 50px;
-
-@duration: .1s;
