@@ -1,6 +1,5 @@
 var express = require( 'express' )
   , http = require( 'http' )
-  , path = require( 'path' )
   , index = require( './routes/index.js' )
   , instance = require( './routes/instance.js' );
  
@@ -21,8 +20,8 @@ app.configure(function() {
   } ) );
   app.use( express.methodOverride() );
   app.use( app.router );
-  app.use( require( 'less-middleware' )( { src: __dirname + '/public' } ) );
-  app.use( express.static( path.join( __dirname, 'public' ) ) );
+  app.use( require( 'less-middleware' )( __dirname + '/public' ) );
+  app.use( express.static( __dirname + '/public' ) );
 });
 
 app.configure( 'development', function() {
