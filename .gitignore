@@ -34,3 +34,4 @@ node_modules
 .lock-wscript
 ._*
 static/*
+public/css/style.css
