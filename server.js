@@ -13,7 +13,12 @@ app.configure(function() {
 
   app.use( express.favicon( __dirname + '/public/img/favicon.ico' ) );
   app.use( express.logger( 'dev' ) );
-  app.use( express.bodyParser() );
+
+  app.use( express.bodyParser( {
+    keepExtensions: true,
+    maxFieldsSize: 2 * 1024 * 1024 * 1024,
+    uploadDir: __dirname + '/tmp'
+  } ) );
   app.use( express.methodOverride() );
   app.use( app.router );
   app.use( require( 'less-middleware' )( { src: __dirname + '/public' } ) );
@@ -24,17 +29,19 @@ app.configure( 'development', function() {
   app.use( express.errorHandler() );
 } );
 
-app.get( '/', index.home );
 
-app.get( '/new', instance.create );
+app.get( '/', instance.workspace );
+app.get( '/:id([A-Z0-9]{6})', instance.workspace );
 
+app.get( '/marker/:id([A-Z0-9]{6})', instance.getMarkers );
 app.post( '/marker/:id([A-Z0-9]{6})', instance.addMarker );
 
-app.get( '/:id([A-Z0-9]{6})', instance.workspace );
-app.post( '/:id([A-Z0-9]{6})', instance.upload );
+app.get( '/structure/:id([A-Z0-9]{6})', instance.getStructure );
+app.post( '/structure/:id([A-Z0-9]{6})', instance.setStructure );
 
 app.get( '/:id([A-Z0-9]{6})/:file', instance.file );
 app.post( '/:id([A-Z0-9]{6})/:file', instance.attach );
+
 
 http.createServer( app ).listen( app.get( 'port' ), function() {
   console.log( 'Server listening on port ' + app.get( 'port' ) );

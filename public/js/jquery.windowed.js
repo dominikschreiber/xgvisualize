@@ -87,8 +87,14 @@
                     case 37: // arrow left pressed
                         self.moveBackward();
                         break;
+                    case 38: // arrow up pressed
+                        self.increaseStepwidth();
+                        break;
                     case 39: // arrow right pressed
                         self.moveForward();
+                        break;
+                    case 40: // arrow down pressed
+                        self.decreaseStepwidth();
                         break;
                 }
             }).keyup( function( event ) {
@@ -157,22 +163,6 @@
                         x: event.pageX,
                         y: event.pageY
                     } ), event );
-                    // add a new marker
-                    // timestamp = self.position;
-                    // markerX = event.clientX;
-                    // markerY = event.clientY;
-                    // $container = self.isOver( { 
-                    //     x: event.pageX, 
-                    //     y: event.pageY 
-                    // } ).children( '.content' );
-                    // containerOffsetTop = parseInt( $container.parent().css( 'top' ) );
-                    // containerOffsetLeft = parseInt( $container.parent().css( 'left' ) );
-                    // zIndex = $container.parent().css( 'zIndex' ) + 1;
-                    // $markerImage = $( '<img src="/img/marker.png" class="markerImage"></img>').css( {
-                    //     'top': markerY - containerOffsetTop,
-                    //     'left': markerX - containerOffsetLeft,
-                    //     'zIndex': zIndex,
-                    // } ).appendTo( $container );
                 } else if ( self.isInSet( self.pressedKeys, 'd' ) ) {
                     self.removeElement( self.isOver( { 
                         x: event.pageX, 
@@ -202,8 +192,6 @@
                 self.onDrop( event, self );
             }, false);
 
-            self.setupContainer( self.$element );
-
             self.$helper = $('<div id="helper-container"/>')
                 .appendTo( self.$element )
                 .hide()
@@ -215,7 +203,7 @@
                 });
 
             $( '#control-speed' ).val( 100 ).change( function() {
-                self.speed = parseInt( $( this ).val() ) || 100;
+                self.setStepwidth( parseInt( $( this ).val() ) || 100 );
             } );
             $( '#control-backward' ).click( function() { 
                 self.moveBackward(); 
@@ -256,23 +244,137 @@
                 }
                 $this.toggleClass( 'disabled' );
             } );
+
+            $.get( self.options.structureUrl ).done( function( structure ) {
+                self.setupStructure( structure, self.$element );
+            } );
+            $.get( self.options.markerUrl ).done( function( markers ) {
+                var marker;
+
+                console.log( markers );
+
+                for ( var i in markers ) {
+                    marker = markers[ i ];
+                    self.addToSet( self.markers, marker );
+                    self.addToMarkerDropdown( marker );
+                }
+            } );
         },
 
 
+        /**
+         * Sets up the structure of the `$container` as described in
+         * `structure`. Once this is done, `next` is called.
+         *
+         * The structure of every container is the same:
+         *
+         *     <div class="container" style="
+         *         position: absolute;
+         *         top: `structure.top`;
+         *         left: `structure.left`;
+         *         width: `structure.width`;
+         *         height: `structure.height`;
+         *         z-index: `structure[ 'z-index' ]`;">
+         *             <div class="icon sync" style="z-index: `structure[ 'z-index' ] + 1`"></div>
+         *             <div class="icon crosshair" style="z-index: `structure[ 'z-index' ] + 1`"></div>
+         *             <div class="content"></div>
+         *     </div>
+         *
+         * Hereby, `$( '.icon .sync' )` and `$( '.icon .crosshair' )` are
+         * set up by `self.setupContainer( $( '.container' ) )`.
+         *
+         * @param structure
+         *        the structure to set up in the container,
+         *        see `self.structurize` for details
+         * @param $container
+         *        the container to be set up with structure.
+         */
+        setupStructure: function( structure, $container ) {
+            var self = this
+              , $content
+              , child
+              , handler
+              , filename;
+
+            $container.css( {
+                'height': structure.height,
+                'width': structure.width,
+                'top': structure.top,
+                'left': structure.left,
+                'z-index': structure[ 'z-index' ]
+            } ).attr( 'class', structure.classList );
+            self.setupContainer( $container );
+
+            if ( !structure.children ) {
+                $container.addClass( 'dropzone' );
+                if ( !structure.file ) {
+                } else {
+                    filename = structure.file.substring( structure.file.lastIndexOf( '/' ) + 1 );
+                    handler = self.getHandlerForFilename( filename );
+                    handler.render( 
+                        $( '<div/>' )
+                            .addClass( 'content' )
+                            .addClass( handler.iam )
+                            .attr( 'data-url', structure.file )
+                            .appendTo( $container ),
+                        structure.file,
+                        filename
+                    );
+                }
+            } else {
+                for ( var i = 0; i < structure.children.length; i++ ) {
+                    child = structure.children[ i ];
+                    self.setupStructure( child, $( '<div/>' ).addClass( 'container' ).css( 'position', 'absolute' ).appendTo( $container ) );
+                }
+            }
+        },
+
+
+        /**
+         * Treats the array `set` like a set (with unique entries).
+         * Checks, if `element` is in the set.
+         *
+         * @param set
+         *        the array the `element` should be found in
+         * @param element
+         *        the element that should be found in `set`
+         */
         isInSet: function( set, element ) {
             return set.indexOf( element ) > -1;
         },
 
 
+        /**
+         * Adds `element` to the array `set` if it is not already 
+         * in it.
+         *
+         * @param set
+         *        the set the `element` should be added to
+         * @param element
+         *        the element that should be added to the `set`
+         */
         addToSet: function( set, element ) {
-            if ( set.indexOf( element ) === -1 ) {
+            var self = this;
+
+            if ( !self.isInSet( set, element ) ) {
                 set.push( element );
             }
         },
 
 
+        /**
+         * Removes all occurances of `element` from `set`.
+         *
+         * @param set
+         *        the array that contains occurances of `element`
+         * @param element
+         *        the element that should be totally removed from
+         *        `set`
+         */
         removeFromSet: function( set, element ) {
-            while ( set.indexOf( element ) > -1 ) {
+            var self = this;
+
+            while ( self.isInSet( set, element ) ) {
                 set.splice( set.indexOf( element ), 1 );
             }
         },
@@ -289,40 +391,72 @@
               , $marker;
 
             self.getHandler( $content ).setMarker( $content, marker, function onSuccess( time ) {
-                var $dropdown = $( '#control-marker-dropdown' ) 
-                  , $markers = $dropdown.children( 'li' )
-                  , $currentMarker;
-
                 $.extend( marker, { time: time } );
 
-                if ( marker.time in self.markers ) {
-                    $( '#marker_' + marker.time ).css( 'background-color', marker.color );
-                } else {
-                    $marker = $( '<li id="marker_' + marker.time + '" style="background-color: ' + marker.color + ';">' + self.toMillisecondsTimeString( marker.time ) + '</li>' )
-                        .click( function() {
-                            self.position = marker.time;
-                            self.move();
-                        } );
-                    for ( var i = 0; i < $markers.length; i++ ) {
-                        $currentMarker = $( $markers[ i ] );
-
-                        if ( marker.time < parseInt( $currentMarker.attr( 'id' ).substr( 7 ) ) ) {
-                            $currentMarker.before( $marker );
-                            break;
-                        }
-                    }
-                    if ( $dropdown.has( $marker ).length == 0 ) {
-                        $marker.appendTo( $dropdown );
-                    }
-                }
                 self.markers[ marker.time ] = marker;
+                self.addToMarkerDropdown( marker );
 
                 $.post( self.options.markerUrl, marker ).done( function( result ) {
                     self.removeFromSet( self.pressedKeys, 'm' );
                     $( '#control-marker' ).addClass( 'disabled' );
                 } );
             } );
+        },
 
+
+        /**
+         * Adds `marker` to `#control-marker-dropdown` right
+         * before the first dropdown element that has a higher
+         * timestamp than the marker.
+         *
+         *     #control-marker-dropdown
+         *     // => [0] 00.000
+         *     // => [1] 02.000
+         *     self.addToMarkerDropdown( { time: 500, ... } )
+         *     #control-marker-dropdown
+         *     // => [0] 00.000
+         *     // => [1] 00.500
+         *     // => [2] 02.000
+         *
+         * @param marker
+         *        The marker to be added and rendered in the
+         *        marker dropdown. Must contain a `time` key
+         *        with a value in milliseconds.
+         */
+        addToMarkerDropdown: function( marker ) {
+            var self = this
+              , $dropdown = $( '#control-marker-dropdown' )
+              , $markers = $dropdown.children( 'li' )
+              , $marker
+              , $currentMarker;
+
+            if ( $( '#marker_' + marker.time ).length > 0 ) {
+                $( '#marker_' + marker.time ).css( 'background-color', marker.color );
+            } else {
+                $marker = $( '<li id="marker_' 
+                    + marker.time
+                    + '" style="background-color: '
+                    + marker.color
+                    + ';">'
+                    + self.toMillisecondsTimeString( marker.time )
+                    + '</li>' ).click( function() {
+                        self.position = marker.time;
+                        self.move();
+                    } );
+
+                for ( var i = 0; i < $markers.length; i++ ) {
+                    $currentMarker = $( $markers[ i ] );
+
+                    if ( marker.time < parseInt( $currentMarker.attr( 'id' ).substr( 7 ) ) ) {
+                        $currentMarker.before( $marker );
+                        break;
+                    }
+                }
+
+                if ( $dropdown.has( $marker ).length === 0 ) {
+                    $marker.appendTo( $dropdown );
+                }
+            }
         },
 
 
@@ -354,6 +488,11 @@
         },
 
 
+        /**
+         * Moves the global position forward by `self.speed`
+         * milliseconds. Triggers the `self.move` to update
+         * all handlers.
+         */
         moveForward: function() {
             var self = this;
 
@@ -362,6 +501,11 @@
         },
 
 
+        /**
+         * Moves the global position backward by `self.speed`
+         * milliseconds. Triggers the `self.move` to update
+         * all handlers.
+         */
         moveBackward: function() {
             var self = this;
 
@@ -370,12 +514,24 @@
         },
 
 
+        /**
+         * Adds `delta` to the global position. Means: if `delta`
+         * is negative, the position is moved backward. *Does not*
+         * trigger  the `self.move` function.
+         *
+         * @param delta
+         *        Positive or negative delta for the global position.
+         */
         updatePosition: function( delta ) {
             var self = this;
             self.position = Math.max( self.position + delta, 0 );
         },
 
 
+        /**
+         * Moves the content of all synced containers to the
+         * global position. Calls `handler.jump` to update all handlers.
+         */
         move: function() {
             var self = this;
 
@@ -386,6 +542,70 @@
 
                 self.getHandler( $content ).jump( $content, self.position );
             } );
+        },
+
+
+        /**
+         * Sets the internal stepwidth (the distance the global
+         * time is increased when `self.moveForward()` is called)
+         * to `stepwidth` milliseconds.
+         *
+         * *Does not* touch the global time when called.
+         *
+         *     self.speed
+         *     // => 100
+         *     self.position
+         *     // => 100
+         *     self.setStepwidth( 200 )
+         *     self.position
+         *     // => 100
+         *     self.moveForward()
+         *     self.position
+         *     // => 300 
+         *
+         * @param stepwidth
+         *        Milliseconds the global time should be de/increased by
+         */
+        setStepwidth: function( stepwidth ) {
+            var self = this;
+            self.speed = stepwidth;
+            $( '#control-speed' ).val( self.speed );
+        },
+
+
+        /**
+         * Increases the stepwidth by `by` milliseconds. If `by` is
+         * left undefined, Math.round( `self.speed` * 0.1 ) milliseconds
+         * is assumed.
+         *
+         * @param by
+         *        the amount the stepwidth should be increased by;
+         *        if left undefined, Math.round( `self.speed` * 0.1 )
+         *        is used
+         */
+        increaseStepwidth: function( by ) {
+            var self = this
+              , amount = ( by ) ? by : Math.round( self.speed * 0.1 );
+
+            self.setStepwidth( self.speed + amount );
+        },
+
+
+        /**
+         * Decreases the stepwidth by `by` milliseconds. If `by` is
+         * left undefined, Math.round( `self.speed` * 0.1 ) milliseconds
+         * is assumed.
+         *
+         * @param by
+         *        the amount the stepwidth should be decreased by;
+         *        if left undefined, Math.round( `self.speed` + 0.1 )
+         *        is used
+         */
+        decreaseStepwidth: function( by ) {
+            var self = this
+              , amount = ( by ) ? by : Math.round( self.speed * 0.1 );
+
+            self.setStepwidth( self.speed - amount );
         },
 
 
@@ -438,6 +658,15 @@
         },
 
 
+        /**
+         * Handler for dragging over the main container.
+         * Draws the `self.$helper` to the matching position.
+         *
+         * @param event
+         *        The dragover event fired.
+         * @param self
+         *        The self object, delegated from the caller.
+         */
         onDragOver: function( event, self ) {
             var middle = self.middle( event.clientX, event.clientY, 0, 0 )
               , $container = self.isOver( middle );
@@ -452,70 +681,194 @@
         },
 
 
+        /**
+         * Stops the `event` from bubbling up.
+         *
+         * @param event
+         *        The event to stop from bubbling.
+         */
         consume: function( event ) {
             event.stopPropagation();
             event.preventDefault();
         },
 
 
+        /**
+         * Handler for the drop event. Called, when a file is dropped
+         * on the main container.
+         *
+         * Selects the right handler for the file dropped, calls
+         * his `handler.read` method to select the right type of
+         * FileReader reading.
+         *
+         * Uploads the read file to `self.options.uploadUrl`, then
+         * adds the new DOM elements and calls the handler to render it
+         * inside the returned `.content`.
+         *
+         * @param event
+         *        The drop event for this method. Should contain some
+         *        `event.dataTransfer.files`.
+         * @param self
+         *        Delegate the `self` object from the called.
+         */
         onDrop: function( event, self ) {
             var middle = self.middle(event.clientX, event.clientY, 0, 0)
               , files = event.dataTransfer.files;
 
             self.consume( event );
+            self.$helper.hide();
 
             if ( typeof files != 'undefined' && files.length > 0 ) {
-                self.$helper.hide();
-
                 for ( var i = 0; i < files.length; i++ ) {
                     var reader = new FileReader()
-                      , file = files[ i ];
+                      , file = files[ i ]
+                      , handler = self.getHandlerForFilename( file.name );
 
                     reader.onerror = function( evt ) {
+                        var message = '';
+
                         switch ( evt.target.error.code ) {
-                            case 1: console.warn('File "' + file.name + '" not found.'); break;
-                            case 2: console.warn('File "' + file.name + '" has changed on disk. Please retry.'); break;
-                            case 3: console.warn('Upload of file "' + file.name + '" has been cancelled.'); break;
-                            case 4: console.warn('File "' + file.name + '" can not be read.'); break;
-                            case 5: console.warn('File "' + file.name + '" is too large to be uploaded by the browser.'); break;
+                            case 1:
+                                message = 'File "' + file.name + '" not found.';
+                                break;
+                            case 2:
+                                message = 'File "' + file.name + '" has changed on disk. Please retry.';
+                                break;
+                            case 3:
+                                message = 'Upload of file "' + file.name + '" has been cancelled.';
+                                break;
+                            case 4:
+                                message = 'File "' + file.name + '" can not be read.';
+                                break;
+                            case 5:
+                                message = 'File "' + file.name + '" is too large to be uploaded by the browser.';
+                                break;
                         }
+
+                        console.warn( message );
                     };
 
                     reader.onloadend = function( evt ) {
-                        for ( var i = 0; i < self.options.handlers.length; i++ ) {
-                            var handler = self.options.handlers[ i ]
-                              , $over = self.isOver( middle )
-                              , $newContainer;
+                        var $over = self.isOver( middle )
+                          , $newContainer
+                          , d = new FormData();
+                        d.append( 'file', evt.target.result );
 
-                            if ( handler.when( file.name ) ) {
-                                var rightHandler = handler;
-
-                                $.post( self.options.uploadUrl( file.name ), { 
-                                        data: evt.target.result, 
-                                        type: handler.type( file ) 
-                                    }, function( pathname ) {
-                                        $newContainer = self.splitContainer( $over, self.splitDirection( $over, middle ) );
-                                        rightHandler.render( 
-                                            $newContainer.addClass( rightHandler.iam ), 
-                                            pathname, 
-                                            pathname.substring( pathname.lastIndexOf( '/' ) + 1 ) 
-                                        );
-                                        $( '#control-sync' ).addClass( 'disabled' );
-                                    } ); 
+                        // the file is uploaded as multipart/form-data
+                        // using the most possible raw upload jQuery supports
+                        $.ajax({
+                            url: self.options.uploadUrl( file.name ),
+                            data: d,
+                            cache: false,
+                            contentType: false,
+                            processData: false,
+                            type: 'POST',
+                            success:  function( pathname ) {
+                                $newContainer = self.splitContainer( $over, self.splitDirection( $over, middle ) );
+                                handler.render( 
+                                    $newContainer.addClass( handler.iam ).attr( 'data-url', pathname ), 
+                                    pathname, 
+                                    pathname.substring( pathname.lastIndexOf( '/' ) + 1 ) 
+                                );
+                                $( '#control-sync' ).addClass( 'disabled' );
+                                self.persistStructure();
                             }
-                        }
+                        } ); 
                     };
 
-
-                    for ( var i = 0; i < self.options.handlers.length; i++ ) {
-                        var handler = self.options.handlers[ i ];
-
-                        if ( handler.when( file.name ) ) {
-                            handler.read( reader, file );
-                        }
-                    }
+                    handler.read( reader, file );
                 }
             }
+        },
+
+
+        /**
+         * Gets the first handler from the list of handlers
+         * that matches `filename`.
+         *
+         *     self.getHandlerForFilename( 'foo.csv' )
+         *     // => csvHandler
+         *
+         * @param filename
+         *        the name of the file that should be handled
+         */
+        getHandlerForFilename: function( filename ) {
+            var self = this
+              , handler;
+
+            for ( var i = 0; i < self.options.handlers.length; i++ ) {
+                handler = self.options.handlers[ i ];
+                if ( handler.when( filename ) )
+                    return handler;
+            }
+        },
+
+
+        /**
+         * posts the structure of the containers below `$container`
+         * to the url specified in `self.options.structureUrl`.
+         * 
+         * `self.structurize` is capable of handling an undefined
+         * `$container`, see the documentation there for more information.
+         *
+         * @param $container
+         *        the container thats children should be structurized and
+         *        saved (the container itself will be structurized too)
+         */
+        persistStructure: function( $container ) {
+            var self = this;
+
+            $.post( self.options.structureUrl, self.structurize( $container ) ).done( function( result ) {
+                console.log( result );
+            } );
+        },
+
+
+        /**
+         * recursively creates a json structure for all children of
+         * `$container`. if `$container` is left undefined, the root
+         * container `self.$element` is structurized.
+         *
+         * a typical call (for a container withoud children) looks like
+         *
+         *     self.structurize( $container )
+         *     // => {
+         *     //      width: '1440',
+         *     //      height: '800',
+         *     //      top: '400px',
+         *     //      left: '0px',
+         *     //      'z-index': 50
+         *     //      file: 'random-400.csv'
+         *     //      children: []
+         *     //    }
+         *
+         * @param $container
+         *        the container that should be structurized. if left
+         *        undefined, the root container `self.$element` will
+         *        be used
+         */
+        structurize: function( $container ) {
+            var self = this
+              , structure = {};
+
+            if ( !$container ) {
+                $container = self.$element;
+            }
+
+            structure.width = $container.get( 0 ).style.width;
+            structure.height = $container.get( 0 ).style.height;
+            structure.left = $container.css( 'left' );
+            structure.top = $container.css( 'top' );
+            structure.classList = $container.attr( 'class' ); 
+            structure[ 'z-index' ] = parseInt( $container.css( 'z-index' ) );
+            structure.file = $container.children( '.content' ).attr( 'data-url' );
+            structure.children = [];
+
+            $container.children( '.container' ).each( function() {
+                structure.children.push( self.structurize( $(this) ) );
+            } );
+
+            return structure;
         },
 
 
@@ -593,8 +946,8 @@
               , border = false
               , isOuterBorder = false;
 
-            $( '.dropzone ').each(function(index, value) {
-                var $entry = $(value)
+            $( '.dropzone ' ).each( function( index, value ) {
+                var $entry = $( value )
                   , top = $entry.offset().top
                   , left = $entry.offset().left
                   , height = $entry.get( 0 ).clientHeight
@@ -737,9 +1090,17 @@
               , percentageWidth
               , height
               , width
-              , $other
+              , $other = $element.siblings( '.container' )
               , otherHeight
-              , otherWidth;
+              , otherWidth
+              , oldHeight = $element[0].clientHeight
+              , oldWidth = $element[0].clientWidth
+              , oldTop = $element.css( 'top' )
+              , oldLeft = $element.css( 'left' )
+              , oldOtherHeight = $other[0].clientHeight
+              , oldOtherWidth = $other[0].clientWidth
+              , oldOtherTop = $other.css( 'top' )
+              , oldOtherLeft = $other.css( 'left' );
 
             if ( border.isOuterBorder ) {
                 return false;
@@ -748,17 +1109,23 @@
                 $parent = $element.parent();
                 percentageHeight = 100 * $element.height() / $parent.height();
                 percentageWidth = 100 * $element.width() / $parent.width();
-                $other = $element.siblings( '.container' );
 
                 if ( border.border == 'top' && self.getChildPosition( $element ) == 'bottom' ) {
 
                     height = percentageHeight - (100 * ySizeInPx) / $parent.height();
                     otherHeight = 100 - height;
-                    
+
                     $element.height( height + '%' )
                         .css( 'top', otherHeight + '%');
                     $other.height( otherHeight + '%' )
                         .css( 'top', 0 + '%' );
+
+                    if(! self.checkMinSize()) {
+                        $element.height( oldHeight )
+                            .css( 'top',  oldOtherHeight);
+                        $other.height ( oldOtherHeight )
+                            .css( 'top', 0 + '%' );
+                    }
 
                     return true;
                 } else if ( border.border == 'bottom' && self.getChildPosition( $element ) == 'top' ) {
@@ -769,6 +1136,13 @@
                         .css( 'top', 0 + '%' );
                     $other.height( otherHeight + '%' )
                         .css( 'top', height + '%' );
+
+                    if(! self.checkMinSize()) {
+                        $element.height( oldHeight )
+                            .css( 'top', 0 + '%' );
+                        $other.height( oldOtherHeight )
+                            .css( 'top', oldHeight );
+                    }
 
                     return true;
                 } else if ( border.border == 'left' && self.getChildPosition( $element ) == 'right' ) {
@@ -781,22 +1155,53 @@
                     $other.width ( otherWidth + '%' )
                         .css( 'left', 0 + '%' );
 
+                    if(! self.checkMinSize()) {
+                        $element.width( oldWidth )
+                            .css( 'left', oldOtherWidth );
+                        $other.width ( oldOtherWidth )
+                            .css( 'left', 0 + '%' );
+                    }
+
                     return true;
                 } else if ( border.border == 'right' && self.getChildPosition( $element ) == 'left' ) {
 
                     width = percentageWidth + (100 * xSizeInPx) / $parent.width();
                     otherWidth = 100 - width;
 
+                    
                     $element.width( width + '%' )
                         .css( 'left', 0 + '%' );
                     $other.width( otherWidth + '%' )
                         .css( 'left', width + '%' );
+
+                    if(! self.checkMinSize()) {
+                        $element.width( oldWidth )
+                            .css( 'left', 0 + '%' );
+                        $other.width( oldOtherWidth )
+                            .css( 'left', oldWidth );
+                    }
 
                     return true;
                 } else {
                     self.resize($parent, xSizeInPx, ySizeInPx, border);
                 }
             }
+        },
+
+        checkMinSize: function () {
+            var self = this,
+                lowest = self.lowest();
+
+            for(var i = 0; i < lowest.length; i++) {
+                var $el = $(lowest[i]),
+                height = $el[0].clientHeight,
+                width = $el[0].clientWidth;
+
+                if(height < self.options.minHeight || width < self.options.minWidth)
+                    return false;
+            }
+
+            return true;
         },
 
 
@@ -807,17 +1212,17 @@
               , $other = $element.siblings( '.container' );
 
             if ( $parent.hasClass( 'horizontal' ) ) {
-                if ( $element.css( 'left' ) != '0px' ) {
+                if ( parseInt( $element.css( 'left' ) ) !== 0 ) {
                     position = 'right';
                 }
-                if ( $other.css( 'left' ) != '0px' ) {
+                if ( parseInt( $other.css( 'left' ) ) !== 0 ) {
                     position = 'left';
                 }
             } else if ( $parent.hasClass( 'vertical' ) ) {
-                if ( $element.css( 'top' ) != '0px' ) {
+                if ( parseInt( $element.css( 'top' ) ) !== 0 ) {
                     position = 'bottom';
                 }
-                if ( $other.css( 'top' ) != '0px' ) {
+                if ( parseInt( $other.css( 'top' ) ) !== 0 ) {
                     position = 'top';
                 }
             }
@@ -826,14 +1231,21 @@
         },
 
         /*
-         * computes the quarter of $container the point
-         * middle = { x: pixels , y: pixels } 
-         * lies in.
+         * Computes the quarter of $container the point
+         * middle = { x: pixels, y: pixels } lies in.
          *
-         * $container is therefore virtually split by lines
+         * `$container` is therefore virtually split by lines
          * that connect its four corners (it's an x, not a +)
          * and every quarter is assigned one of these four
          * split elements.
+         *
+         * @param $container
+         *        The container that something is moved over
+         *        at the position `middle`
+         * @param middle
+         *        The exact position something is moved over
+         *        the `$container`. Must be relative to the
+         *        container.
          */
         splitDirection: function( $container, middle ) {
             var self = this
@@ -901,7 +1313,20 @@
         },
 
 
-        splitContainer: function($container, edge, oldClasses, newClasses) {
+        /**
+         * Splits the `$container` after content is put at the `edge` of
+         * the container. Two containers are put into `$container`, the 
+         * `.content` of the container is always put into the first child.
+         * Depending on the `edge`, the containers are swapped using css
+         * offsets. The `$( '.content' )` of the second container is returned.
+         *
+         * @param $container
+         *        The container that should be split into two
+         * @param edge
+         *        The edge the content is dropped in. See `self.splitDirection`
+         *        for details on the edge.
+         */
+        splitContainer: function( $container, edge ) {
             var self = this
               , top1 = ( edge == 'bottom' ) ? '50%' : 0
               , top2 = ( edge == 'top' ) ? '50%' : 0
@@ -944,6 +1369,23 @@
         },
 
 
+        /**
+         * creates a new container with the attributes specified
+         * and calls `self.setupContainer` on it.
+         *
+         * @param top
+         *        the offset to the top the new container should have
+         * @param left
+         *        the offset to the left the new container should have
+         * @param height
+         *        the height the new container should have
+         * @param width
+         *        the width the new container should have
+         * @param zIndex
+         *        the zIndex the new container should have
+         * @param classes
+         *        the classes that should be added to the new container
+         */
         newContainer: function( top, left, height, width, zIndex, classes ) {
             var self = this,
                 $container = $( '<div class="container"/>' ).css( {
@@ -961,6 +1403,14 @@
         },
 
 
+        /**
+         * sets up the `$container` with the `.sync` and `.start-set`
+         * buttons in the top right of the container.
+         *
+         * @param $container
+         *        the container to be set up. will contain two more
+         *        divs, one `.sync`, one `.start-set`.
+         */
         setupContainer: function( $container ) {
             var self = this
               , zIndex = parseInt( $container.css( 'z-index' ) ) + 1;
@@ -989,46 +1439,15 @@
                     } 
                 } );
         },
-
-
-        // toJSON: function( $element ) {
-        //     if ( !$element ) $element = this.$element;
-
-        //     var self = this
-        //       , $children = $element.children( '.content' )
-        //       , cls = self.getClass( $children )
-        //       , children = []
-        //       , contentHandler = self.getHandler( $children );
-
-        //     $element.children( '.content' ).each(function() {
-        //         children.push( self.toJSON( $(this) ) );
-        //     });
-            
-        //     return {
-        //         classes: $element.attr( 'class' ),
-        //         css: $element.attr( 'style' ),
-        //         children: children,
-        //         content: (( contentHandler ) ? contentHandler.toJSON( $element.children( '.content' ) ) : false )
-        //     };
-        // },
-
-
-        // getHandlerForClass: function( classname ) {
-        //     var self = this;
-
-        //     for ( var i = 0; i < self.options.handlers.length; i++ ) {
-        //         var handler = self.options.handlers[ i ];
-
-        //         if ( handler.iam == classname ) {
-        //             return handler;
-        //         }
-        //     }
-
-        //     return false;
-        // }
     };
 
 
+    /**
+     * binds the windowed-functionality to jQuery
+     * 
+     * @param options
+     *        the options the plugin should be initialized with
+     */
     $.fn[pluginName] = function ( options ) {
         return this.each(function () {
             if (!$.data(this, "plugin_" + pluginName)) {

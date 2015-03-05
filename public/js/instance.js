@@ -16,7 +16,7 @@ var $main
 
 
       read: function( reader, file ) {
-        reader.readAsBinaryString( file );
+        reader.readAsDataURL( file );
       },
 
 
@@ -306,7 +306,7 @@ var $main
           name: filename
         };
 
-        $video = $( '<video src="' + url + '" controls preload="auto"/>' )
+        $video = $( '<video src="' + url + '" controls preload="true"/>' )
           .appendTo( $content.attr( 'id', id ) );
         video = $video.get( 0 );
         canvas = $( '<canvas class="marker-canvas">please use a browser that supports <code>canvas</code>.</canvas>' )
@@ -457,7 +457,7 @@ var $main
         self.clearCanvas( canvas );
         self.drawMarker( canvas, { x: marker.x, y: marker.y, color: marker.color } );       
 
-        onSuccess( video.currentTime * 1000 ); // video.currentTime is in seconds
+        onSuccess( Math.round( video.currentTime * 1000 ) ); // video.currentTime is in seconds
       },
 
 
@@ -496,25 +496,19 @@ var $main
     },
 
     read: function( reader, file ) {
-      reader.readAsBinaryString( file );
+      reader.readAsDataURL( file );
     },
 
     render: function( $content, pathname, id ) {
-      var map
-        , kml;
-
-      $( '<div/>' ).attr( 'id', id ).appendTo( $content );
-
-      map = new google.maps.Map( document.getElementById( id ), {
-        center: new google.maps.LatLng( 49.874819, 8.660523 ),
-        zoom: 10,
-        mapTypeId: google.maps.MapTypeId.ROADMAP
-      } );
-
-      kml = new google.maps.KmlLayer( {
-        url: location.protocol + '//' + location.host + pathname,
-        map: map
-      } );
+      var map = new google.maps.Map( $( '<div id="' + id + '"/>' ).appendTo( $content ).get( 0 ), {
+            center: new google.maps.LatLng( 49.874819, 8.660523 ),
+            zoom: 10,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+          } )
+        , kml = new google.maps.KmlLayer( {
+            url: location.protocol + '//' + location.host + pathname,
+            map: map
+          } );
 
       if ( kml.getDefaultViewport() )
         map.fitBounds( kml.getDefaultViewport() );
@@ -612,9 +606,12 @@ function unique( string ) {
 
 
 $( document ).ready( function() {
-  $main = $('#main-container').windowed( {
+  var id = location.pathname.substr( -6 );
+
+  $main = $( '#main-container' ).windowed( {
     handlers: [ csvHandler, videoHandler, kmlHandler ],
     uploadUrl: function( filename ) { return location.pathname + '/' + filename + '/'; },
-    markerUrl: '/marker/' + location.pathname.substr( -6 ) + '/'
+    markerUrl: '/marker/' + id + '/',
+    structureUrl: '/structure/' + id + '/'
   } );
 } );
