@@ -20,7 +20,8 @@
   ],
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "./node_modules/.bin/grunt"
   },
   "keywords": [
     "data-visualization",
@@ -34,10 +35,21 @@
     "nano": "3.3.8"
   },
   "devDependencies": {
+    "dateformat": "^1.0.11",
+    "eventemitter2": "^0.4.14",
+    "findup-sync": "^0.2.1",
+    "glob": "^5.0.1",
     "grunt": "~0.4.1",
-    "grunt-contrib-watch": "~0.4.4",
-    "grunt-contrib-uglify": "~0.2.2",
+    "grunt-cli": "^0.1.13",
     "grunt-contrib-jshint": "~0.6.0",
-    "grunt-nodemon": "0.0.5"
+    "grunt-contrib-uglify": "~0.2.2",
+    "grunt-contrib-watch": "~0.4.4",
+    "grunt-legacy-log": "^0.1.1",
+    "grunt-legacy-util": "^0.2.0",
+    "iconv-lite": "^0.4.7",
+    "js-yaml": "^3.2.7",
+    "minimatch": "^2.0.1",
+    "nopt": "^3.0.1",
+    "rimraf": "^2.3.1"
   }
 }

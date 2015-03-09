@@ -35,3 +35,4 @@ node_modules
 ._*
 static/*
 public/css/style.css
+*.min.js
