@@ -1,9 +1,14 @@
 var express = require( 'express' )
+  , fs = require( 'fs' )
   , http = require( 'http' )
   , index = require( './routes/index.js' )
   , instance = require( './routes/instance.js' );
  
 var app = express();
+
+if ( !fs.existsSync( __dirname + '/static' ) ) {
+  fs.mkdirSync( __dirname + '/static' );
+}
 
 app.configure(function() {
   app.set( 'port', process.env.PORT || 9273 );
