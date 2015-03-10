@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<gpx version="1.0" creator="Turbo GPS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.topografix.com/GPX/1/0" xsi:schemaLocation="http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd">
+ 
+<wpt lat="47.545" lon="7.586">
+  <name>Beispiel-Marker</name>
+  <desc>
+     Man kann auch way points in den GPX-Trace aufnehmen.
+     Wichtig dabei ist, dass &#60;b&#62;UTF8&#60;/b&#62; verwendet wird,
+     wenn Umlaute oder HTML-Code verwendet werden soll
+     (z.B. &#223;, &#228;, &#246; ... siehe dieses Beispiel hier)
+     &#60;br&#62;&#60;br&#62;Unicode-Tabelle:
+     &#60;a href="http://de.selfhtml.org/html/referenz/zeichen.htm"&#62;hier&#60;/a&#62;.
+  </desc>
+</wpt>
+ 
+<trk>
+  <name>mb bruderholz basel reinach</name>
+  <number>1</number>
+<trkseg>
+  <trkpt lat="47.547855" lon="7.589664">
+   <ele>0.000000</ele>
+   <name>p #1</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.546871" lon="7.592068">
+   <ele>0.000000</ele>
+   <name>p #2</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.546379" lon="7.593312">
+   <ele>0.000000</ele>
+   <name>p #3</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.545338" lon="7.592540">
+   <ele>0.000000</ele>
+   <name>p #4</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.545685" lon="7.591596">
+   <ele>0.000000</ele>
+   <name>p #5</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.545395" lon="7.591381">
+   <ele>0.000000</ele>
+   <name>p #6</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.546089" lon="7.588205">
+   <ele>0.000000</ele>
+   <name>p #7</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.545338" lon="7.587776">
+   <ele>0.000000</ele>
+   <name>p #8</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.545799" lon="7.586532">
+   <ele>0.000000</ele>
+   <name>p #9</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.542873" lon="7.584171">
+   <ele>0.000000</ele>
+   <name>p #10</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.541889" lon="7.587175">
+   <ele>0.000000</ele>
+   <name>p #11</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.540615" lon="7.586489">
+   <ele>0.000000</ele>
+   <name>p #12</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.540062" lon="7.586532">
+   <ele>0.000000</ele>
+   <name>p #13</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.539688" lon="7.587090">
+   <ele>0.000000</ele>
+   <name>p #14</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.539600" lon="7.587647">
+   <ele>0.000000</ele>
+   <name>p #15</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.539425" lon="7.587733">
+   <ele>0.000000</ele>
+   <name>p #16</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.539455" lon="7.586617">
+   <ele>0.000000</ele>
+   <name>p #17</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.539425" lon="7.586060">
+   <ele>0.000000</ele>
+   <name>p #18</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.539165" lon="7.585630">
+   <ele>0.000000</ele>
+   <name>p #19</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.538528" lon="7.585545">
+   <ele>0.000000</ele>
+   <name>p #20</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.538269" lon="7.585545">
+   <ele>0.000000</ele>
+   <name>p #21</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.537746" lon="7.585888">
+   <ele>0.000000</ele>
+   <name>p #22</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.537281" lon="7.586360">
+   <ele>0.000000</ele>
+   <name>p #23</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.536209" lon="7.586617">
+   <ele>0.000000</ele>
+   <name>p #24</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.535717" lon="7.587218">
+   <ele>0.000000</ele>
+   <name>p #25</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.534210" lon="7.587347">
+   <ele>0.000000</ele>
+   <name>p #26</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.533283" lon="7.587090">
+   <ele>0.000000</ele>
+   <name>p #27</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.532269" lon="7.587218">
+   <ele>0.000000</ele>
+   <name>p #28</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.531895" lon="7.588162">
+   <ele>0.000000</ele>
+   <name>p #29</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.530994" lon="7.588634">
+   <ele>0.000000</ele>
+   <name>p #30</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.529545" lon="7.588549">
+   <ele>0.000000</ele>
+   <name>p #31</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.528214" lon="7.588592">
+   <ele>0.000000</ele>
+   <name>p #32</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.528069" lon="7.588978">
+   <ele>0.000000</ele>
+   <name>p #33</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.527809" lon="7.589536">
+   <ele>0.000000</ele>
+   <name>p #34</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.525894" lon="7.589922">
+   <ele>0.000000</ele>
+   <name>p #35</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.523083" lon="7.589407">
+   <ele>0.000000</ele>
+   <name>p #36</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.521778" lon="7.589793">
+   <ele>0.000000</ele>
+   <name>p #37</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.519577" lon="7.590308">
+   <ele>0.000000</ele>
+   <name>p #38</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.516304" lon="7.589750">
+   <ele>0.000000</ele>
+   <name>p #39</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.513142" lon="7.588634">
+   <ele>0.000000</ele>
+   <name>p #40</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.509953" lon="7.587004">
+   <ele>0.000000</ele>
+   <name>p #41</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.509434" lon="7.583227">
+   <ele>0.000000</ele>
+   <name>p #42</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.508156" lon="7.583055">
+   <ele>0.000000</ele>
+   <name>p #43</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.507172" lon="7.583184">
+   <ele>0.000000</ele>
+   <name>p #44</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.507141" lon="7.581425">
+   <ele>0.000000</ele>
+   <name>p #45</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.506882" lon="7.580566">
+   <ele>0.000000</ele>
+   <name>p #46</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.506359" lon="7.580180">
+   <ele>0.000000</ele>
+   <name>p #47</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.505230" lon="7.579536">
+   <ele>0.000000</ele>
+   <name>p #48</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.503838" lon="7.579408">
+   <ele>0.000000</ele>
+   <name>p #49</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.502911" lon="7.578421">
+   <ele>0.000000</ele>
+   <name>p #50</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.502880" lon="7.580566">
+   <ele>0.000000</ele>
+   <name>p #51</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.502968" lon="7.582669">
+   <ele>0.000000</ele>
+   <name>p #52</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.501228" lon="7.581553">
+   <ele>0.000000</ele>
+   <name>p #53</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.501053" lon="7.581811">
+   <ele>0.000000</ele>
+   <name>p #54</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.500126" lon="7.577734">
+   <ele>0.000000</ele>
+   <name>p #55</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.498940" lon="7.575459">
+   <ele>0.000000</ele>
+   <name>p #56</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.498619" lon="7.575030">
+   <ele>0.000000</ele>
+   <name>p #57</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.496880" lon="7.572412">
+   <ele>0.000000</ele>
+   <name>p #58</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.496792" lon="7.571726">
+   <ele>0.000000</ele>
+   <name>p #59</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.495140" lon="7.570610">
+   <ele>0.000000</ele>
+   <name>p #60</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.494995" lon="7.571082">
+   <ele>0.000000</ele>
+   <name>p #61</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+  <trkpt lat="47.493950" lon="7.570095">
+   <ele>0.000000</ele>
+   <name>p #62</name>
+   <time>60056-05-28T03:36:54Z</time>
+   <speed>0.000000</speed>
+   <course>0.000000</course>
+  </trkpt>
+ </trkseg>
+</trk>
+</gpx>
